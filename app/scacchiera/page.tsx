@@ -3,7 +3,17 @@
 import React, { useState } from 'react';
 // Definizione del componente Home
 export default function Home() {
-  const [cells, setCells] = useState(Array.from({ length: 8 }, () => Array.from({ length: 8 }, (_, colIndex) => colIndex + 1)));
+  const [cells, setCells] = useState<number[][]>([
+  [5, 3, 3, 9, 10, 3, 3, 5],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [1, 1, 1, 1, 1, 1, 1, 1],
+  [5, 3, 3, 9, 10, 3, 3, 5]
+]);
+  
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
   const [previousCell, setPreviousCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
 
@@ -32,11 +42,11 @@ export default function Home() {
           row.map((cell, colIndex) => (
             <div
               key={`${rowIndex}-${colIndex}`} // Chiave unica per ogni cella
-              className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'}`} // Applicazione di classi CSS in base alla posizione della cella
+              className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12`} // Applicazione di classi CSS in base alla posizione della cella
               onClick={() => handleCellClick(rowIndex, colIndex)} // Gestore del clic sulla cella
             >
               {/* Testo all'interno della cella, calcolato in base alla posizione */}
-              {cell}
+              {cell !== 0 ? cell : ""}
             </div>
           ))
         ))}
