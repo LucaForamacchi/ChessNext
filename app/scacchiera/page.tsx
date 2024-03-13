@@ -1,10 +1,7 @@
-// To inform next js, this is a client component 
 "use client"; 
 import React, { useState } from 'react';
+
 export default function Home() {
-
-
-
   const [cells, setCells] = useState<number[][]>([
     [5, 3, 3, 9, 10, 3, 3, 5],
     [1, 1, 1, 1, 1, 1, 1, 1],
@@ -16,7 +13,9 @@ export default function Home() {
     [5, 3, 3, 9, 10, 3, 3, 5]
   ]);
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
-  const [moves, setMoves] = useState<string[]>([]); 
+  const [moves, setMoves] = useState<string[]>([]);
+  const [highlightedCells, setHighlightedCells] = useState<{ rowIndex: number, colIndex: number }[]>([]); 
+
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -33,8 +32,7 @@ export default function Home() {
         
         const move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`;
         
-        // Se la mossa implica una mangiata, aggiungi il "+" alla fine
-        if ((Math.abs(selectedCell.rowIndex - rowIndex) > 1 || Math.abs(selectedCell.colIndex - colIndex) > 1)&&temp!=0) {
+        if ((Math.abs(selectedCell.rowIndex - rowIndex) > 1 || Math.abs(selectedCell.colIndex - colIndex) > 1) && temp !== 0) {
           setMoves(prevMoves => [...prevMoves, move + "+"]);
         } else {
           setMoves(prevMoves => [...prevMoves, move]);
@@ -43,13 +41,14 @@ export default function Home() {
       
       setCells(newCells);
       setSelectedCell(null);
+      setHighlightedCells([{ rowIndex: selectedCell.rowIndex, colIndex: selectedCell.colIndex }, { rowIndex, colIndex }]); // Imposta entrambe le celle coinvolte nello scambio come evidenziate
     } else {
       setSelectedCell({ rowIndex, colIndex });
     }
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between p-24"style={{ backgroundColor: '#c3e6cb' }}>
       <div className="flex">
         <div className="grid grid-cols-1">
           {letters.map((letter, index) => (
@@ -68,6 +67,7 @@ export default function Home() {
             <div
               key={`${rowIndex}-${colIndex}`}
               className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12`}
+              style={{ backgroundColor: highlightedCells.some(c => c.rowIndex === rowIndex && c.colIndex === colIndex) ? 'yellow' : undefined }} 
               onClick={() => handleCellClick(rowIndex, colIndex)}
             >
               {cell !== 0 ? cell : ""}
