@@ -1,8 +1,10 @@
 // To inform next js, this is a client component 
 "use client"; 
 import React, { useState } from 'react';
-
 export default function Home() {
+
+
+
   const [cells, setCells] = useState<number[][]>([
     [5, 3, 3, 9, 10, 3, 3, 5],
     [1, 1, 1, 1, 1, 1, 1, 1],
@@ -15,6 +17,8 @@ export default function Home() {
   ]);
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
   const [moves, setMoves] = useState<string[]>([]); 
+  const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
     if (selectedCell) {
@@ -27,7 +31,7 @@ export default function Home() {
       if (newCells[rowIndex][colIndex] !== 0) {
         newCells[selectedCell.rowIndex][selectedCell.colIndex] = 0;
         
-        const move = `${selectedCell.rowIndex + 1}${selectedCell.colIndex + 1} => ${rowIndex + 1}${colIndex + 1}`;
+        const move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`;
         
         // Se la mossa implica una mangiata, aggiungi il "+" alla fine
         if ((Math.abs(selectedCell.rowIndex - rowIndex) > 1 || Math.abs(selectedCell.colIndex - colIndex) > 1)&&temp!=0) {
@@ -46,6 +50,18 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="flex">
+        <div className="grid grid-cols-1">
+          {letters.map((letter, index) => (
+            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{letter}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-8">
+          {numbers.map((number, index) => (
+            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{number}</div>
+          ))}
+        </div>
+      </div>
       <div className="grid grid-cols-8">
         {cells.map((row, rowIndex) => (
           row.map((cell, colIndex) => (
