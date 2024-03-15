@@ -17,6 +17,8 @@ io.on("connection", (socket) => {
     for (const lobby in lobbies) {
       if (lobbies[lobby].players.length === 1) {
         lobbies[lobby].players.push(socket.id);
+        // Inizializza il turno corrente quando il secondo giocatore si unisce alla lobby
+        lobbies[lobby].currentTurn = lobbies[lobby].players[0];
         socket.join(lobby);
         socket.lobby = lobby;
         joinedLobby = true;
@@ -40,7 +42,9 @@ io.on("connection", (socket) => {
           [0, 0, 0, 0, 0, 0, 0, 0],
           [1, 1, 1, 1, 1, 1, 1, 1],
           [5, 3, 3, 9, 10, 3, 3, 5]
-        ]
+        ],
+        // Inizializza il turno corrente quando la lobby viene creata
+        currentTurn: socket.id
       };
       socket.join(newLobby);
       socket.lobby = newLobby;
@@ -56,9 +60,15 @@ io.on("connection", (socket) => {
 
   socket.on("update_board", (newBoard) => {
     lobbies[socket.lobby].board = newBoard;
+    // Passa il turno al giocatore successivo dopo ogni mossa
+    lobbies[socket.lobby].currentTurn = lobbies[socket.lobby].players.find(player => player !== socket.id);
     io.to(socket.lobby).emit("update_board", newBoard);
+    io.to(socket.lobby).emit("current_turn", lobbies[socket.lobby].currentTurn);
   });
 
+  socket.on("new_move", (move) =>{
+    io.to(socket.lobby).emit("new_move", move);
+  });
   socket.on("disconnect", () => {
     console.log("User disconnected.");
 
@@ -74,4 +84,5 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 console.log("server started")
