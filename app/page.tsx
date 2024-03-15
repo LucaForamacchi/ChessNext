@@ -1,6 +1,7 @@
 "use client"; 
 import Link from 'next/link';
-import { useState } from 'react';
+
+import React, { useState } from 'react';
 
 // Componente del logo
 const Logo = () => (
@@ -10,6 +11,7 @@ const Logo = () => (
 );
 
 export default function Page() {
+  
   const [hover1vs1, setHover1vs1] = useState(false);
   const [hover1vsBot, setHover1vsBot] = useState(false);
 

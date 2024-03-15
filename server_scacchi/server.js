@@ -1,0 +1,77 @@
+const io = require("socket.io")(3000, {
+  cors: {
+    origin: "http://localhost:3001",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Oggetto per memorizzare le lobby e i giocatori all'interno di ciascuna lobby, insieme alla scacchiera associata
+const lobbies = {};
+
+io.on("connection", (socket) => {
+  console.log("A user connected.");
+
+  socket.on("join_lobby", () => {
+    let joinedLobby = false;
+
+    for (const lobby in lobbies) {
+      if (lobbies[lobby].players.length === 1) {
+        lobbies[lobby].players.push(socket.id);
+        socket.join(lobby);
+        socket.lobby = lobby;
+        joinedLobby = true;
+        console.log(`Player ${socket.id} joined lobby ${lobby}`);
+        // Invia il messaggio "lobby_joined" al client
+        socket.emit("lobby_joined", lobby);
+        break;
+      }
+    }
+
+    if (!joinedLobby) {
+      const newLobby = "lobby_" + Math.random().toString(36).substr(2, 9);
+      lobbies[newLobby] = {
+        players: [socket.id],
+        board: [
+          [5, 3, 3, 9, 10, 3, 3, 5],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0],
+          [1, 1, 1, 1, 1, 1, 1, 1],
+          [5, 3, 3, 9, 10, 3, 3, 5]
+        ]
+      };
+      socket.join(newLobby);
+      socket.lobby = newLobby;
+      console.log(`Player ${socket.id} created and joined new lobby ${newLobby}`);
+      // Invia il messaggio "lobby_joined" al client
+      socket.emit("lobby_joined", newLobby);
+    }
+  });
+
+  socket.on("message", (message) => {
+    io.to(socket.lobby).emit("message", message);
+  });
+
+  socket.on("update_board", (newBoard) => {
+    lobbies[socket.lobby].board = newBoard;
+    io.to(socket.lobby).emit("update_board", newBoard);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected.");
+
+    if (socket.lobby && lobbies[socket.lobby]) {
+      const index = lobbies[socket.lobby].players.indexOf(socket.id);
+      if (index !== -1) {
+        lobbies[socket.lobby].players.splice(index, 1);
+        if (lobbies[socket.lobby].players.length === 0) {
+          delete lobbies[socket.lobby];
+          console.log(`Empty lobby ${socket.lobby} removed`);
+        }
+      }
+    }
+  });
+});
+console.log("server started")
