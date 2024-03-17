@@ -11,9 +11,37 @@ const lobbies = {};
 io.on("connection", (socket) => {
   console.log("A user connected.");
 
-  socket.on("join_lobby", () => {
-    let joinedLobby = false;
+  // Funzione per creare una nuova lobby
+  const createNewLobby = () => {
+    const newLobby = "lobby_" + Math.random().toString(36).substr(2, 9);
+    lobbies[newLobby] = {
+      players: [socket.id],
+      board: [
+        ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
+        ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+        Array(8).fill(''),
+        Array(8).fill(''),
+        Array(8).fill(''),
+        Array(8).fill(''),
+        ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+        ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+      ],
+      // Inizializza il turno corrente quando la lobby viene creata
+      currentTurn: socket.id
+    };
+    socket.join(newLobby);
+    socket.lobby = newLobby;
+    console.log(`Player ${socket.id} created and joined new lobby ${newLobby}`);
+    // Invia il messaggio "lobby_joined" al client
+    socket.emit("lobby_joined", newLobby);
+  };
 
+  // Se non ci sono lobby disponibili, crea una nuova lobby per il primo client che si connette
+  if (Object.keys(lobbies).length === 0) {
+    createNewLobby();
+  } else {
+    // Altrimenti, il primo client si unisce automaticamente alla prima lobby disponibile
+    let joinedLobby = false;
     for (const lobby in lobbies) {
       if (lobbies[lobby].players.length === 1) {
         lobbies[lobby].players.push(socket.id);
@@ -29,29 +57,14 @@ io.on("connection", (socket) => {
       }
     }
 
+    // Se non è stato possibile unirsi ad alcuna lobby esistente, crea una nuova lobby
     if (!joinedLobby) {
-      const newLobby = "lobby_" + Math.random().toString(36).substr(2, 9);
-      lobbies[newLobby] = {
-        players: [socket.id],
-        board: [
-          [5, 3, 3, 9, 10, 3, 3, 5],
-          [1, 1, 1, 1, 1, 1, 1, 1],
-          [0, 0, 0, 0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0, 0, 0, 0],
-          [1, 1, 1, 1, 1, 1, 1, 1],
-          [5, 3, 3, 9, 10, 3, 3, 5]
-        ],
-        // Inizializza il turno corrente quando la lobby viene creata
-        currentTurn: socket.id
-      };
-      socket.join(newLobby);
-      socket.lobby = newLobby;
-      console.log(`Player ${socket.id} created and joined new lobby ${newLobby}`);
-      // Invia il messaggio "lobby_joined" al client
-      socket.emit("lobby_joined", newLobby);
+      createNewLobby();
     }
+  }
+
+  socket.on("message", (message) => {
+    io.to(socket.lobby).emit("message", message);
   });
 
   socket.on("message", (message) => {
