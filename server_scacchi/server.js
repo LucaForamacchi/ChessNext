@@ -67,10 +67,6 @@ io.on("connection", (socket) => {
     io.to(socket.lobby).emit("message", message);
   });
 
-  socket.on("message", (message) => {
-    io.to(socket.lobby).emit("message", message);
-  });
-
   socket.on("update_board", (newBoard) => {
     lobbies[socket.lobby].board = newBoard;
     // Passa il turno al giocatore successivo dopo ogni mossa

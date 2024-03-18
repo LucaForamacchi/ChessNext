@@ -9,16 +9,24 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
 
     if (piece === 'P'){//pedone bianco
         if (startCol === endCol) {
-            if ((deltaY === 1) || (startRow === 1 && deltaY === 2)) {
+            if ((deltaY === 1 && cells[endRow][endCol] === '') || (startRow === 1 && deltaY === 2 && cells[endRow][endCol] === '' && cells[endRow - 1][endCol] === '')) {
                 return true;
             }
+        } else if (deltaX === 1 && deltaY === 1 && cells[endRow][endCol] !== '' && cells[endRow][endCol].toLowerCase() === cells[startRow][startCol].toLowerCase()) {
+            return true; // mangiare
+        } else if (startRow === 4 && endRow === 5 && deltax === 1 && cells[4][endCol] === 'p' && cells[startRow][startCol] === 'P') {
+            return true; // en passant
         }
     }
     else if (piece === 'p'){//pedone nero
         if (startCol === endCol) {
-            if ((deltaY === 1) || (startRow === 6 && deltaY === 2)) {
+            if ((deltaY === 1 && cells[endRow][endCol] === '') || (startRow === 6 && deltaY === 2 && cells[endRow][endCol] === '' && cells[endRow + 1][endCol] === '')) {
                 return true;
             }
+        } else if (deltaX === 1 && deltaY === 1 && cells[endRow][endCol] !== '' && cells[endRow][endCol].toUpperCase() === cells[startRow][startCol].toUpperCase()) {
+            return true; // mangiare
+        } else if (startRow === 3 && endRow === 2 && deltax === 1 && cells[3][endCol] === 'P' && cells[startRow][startCol] === 'p') {
+            return true; // en passant
         }
     }
 
