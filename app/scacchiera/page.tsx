@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove } from './chess_rules';
+import { isValidMove, isCheckMate, findpiece } from './chess_rules';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -22,7 +22,9 @@ export default function Home() {
   const [hover1vs1, setHover] = useState(false);
   const [timer, setTimer] = useState<number>(600);
   const [lobby, setLobby] = useState("");
+  const [colour, setColour] = useState("white");
   const [myturn, setTurn] = useState(true);
+  const [i, setI] = useState<number>(0);
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -39,11 +41,13 @@ export default function Home() {
       // Se una lobby è disponibile, unisciti automaticamente ad essa
       setLobby(lobbyName);
       newSocket.emit("join_lobby", lobbyName);
+      
     });
 
     newSocket.on("no_lobby_available", () => {
       // Se nessuna lobby è disponibile, crea una nuova lobby
       newSocket.emit("create_lobby");
+      
     });
 
     return () => {
@@ -58,14 +62,29 @@ export default function Home() {
       });
       socket.on("update_board", (newCells) => {
         setCells(newCells);
+        socket.emit("turn");
+        
       });
       socket.on("current_turn", (currentTurn) => {
         // Verifica se il turno corrente appartiene al socket corrente
         const isMyTurn = currentTurn === socket.id;
-    
+        (i%2)===0 ? setColour("black") : setColour("white");
+        setI(i+1);
         // Imposta il turno corrente
         setTurn(isMyTurn);
-    });
+        socket.emit("checkmate");
+      });
+
+      socket.on("isCheckMate", () =>{
+        console.log("siuuuuuuuuuuu");
+        const whiteKingPosition = findpiece("K", 'white', cells);
+        const blackKingPosition = findpiece("k",'black', cells);
+        
+        if((isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) || (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells))){
+          console.log("checkmate");
+        }
+        
+      });
     
       socket.on("new_move", (new_move) =>{
         setMoves([...moves, new_move]);
@@ -90,52 +109,40 @@ export default function Home() {
   
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
-    if (!lobby || !myturn) {
+    if (!lobby) {
         return;
     }
-
     const piece = cells[rowIndex][colIndex];
-
-    // Controlla se è il turno del giocatore corrente
-    if ((myturn && piece === piece.toUpperCase()) || (!myturn && piece === piece.toLowerCase())) {
-        if (!selectedCell && piece !== '') {
-            setSelectedCell({ rowIndex, colIndex });
-        } else if (selectedCell) {
-            const newCells = [...cells];
-            const temp = newCells[selectedCell.rowIndex][selectedCell.colIndex];
-
-            if (selectedCell.rowIndex !== rowIndex || selectedCell.colIndex !== colIndex) {
-                // Controlla se la mossa è valida rispettando le regole degli scacchi
-                if (isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells)) {
-                    if ((myturn && piece === piece.toUpperCase()) || (!myturn && piece === piece.toLowerCase())) {
-                        const move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`;
-
-                        if (newCells[rowIndex][colIndex] !== '') {
-                            newCells[selectedCell.rowIndex][selectedCell.colIndex] = '';
-                            socket?.emit("new_move", move + "+");
-                        } else {
-                            socket?.emit("new_move", move);
-                        }
-
-                        // Svuota la casella di partenza
-                        newCells[selectedCell.rowIndex][selectedCell.colIndex] = '';
-
-                        // Sposta il pezzo nella nuova posizione
-                        newCells[rowIndex][colIndex] = temp;
-
-                        setCells(newCells);
-                        setSelectedCell(null);
-                        socket?.emit("update_board", newCells);
-                    } else {
-                        console.log("Il pezzo selezionato non è consentito per il tuo turno.");
-                    }
-                } else {
-                    setSelectedCell({ rowIndex, colIndex });
-                }
-            } else {
-                setSelectedCell(null);
-            }
+    
+    if (!selectedCell && piece !== '') {
+      // Controlla se è il turno del giocatore corrente
+      if ((myturn && piece === piece.toUpperCase() && colour === "white") || (myturn && piece === piece.toLowerCase() && colour === "black")) {
+        setSelectedCell({ rowIndex, colIndex });
+      }
+      else {
+        setSelectedCell(null);
+      }
+    } else if (selectedCell) {
+      const newCells = [...cells];
+      const temp = newCells[selectedCell.rowIndex][selectedCell.colIndex]
+        // Controlla se la mossa è valida rispettando le regole degli scacchi
+      if (isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells)) {
+        const move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
+        if (newCells[rowIndex][colIndex] !== '') {
+            socket?.emit("new_move", move + "+");
+        } else {
+            socket?.emit("new_move", move);
         }
+        // Svuota la casella di partenza
+        newCells[selectedCell.rowIndex][selectedCell.colIndex] = '';
+        // Sposta il pezzo nella nuova posizione
+        newCells[rowIndex][colIndex] = temp;
+        setCells(newCells);
+        setSelectedCell(null);
+        socket?.emit("update_board", newCells);
+      } else {
+          setSelectedCell({ rowIndex, colIndex });
+      }
     }
 };
   

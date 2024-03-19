@@ -72,9 +72,16 @@ io.on("connection", (socket) => {
     // Passa il turno al giocatore successivo dopo ogni mossa
     lobbies[socket.lobby].currentTurn = lobbies[socket.lobby].players.find(player => player !== socket.id);
     io.to(socket.lobby).emit("update_board", newBoard);
+    
+  });
+  
+  socket.on("turn", () =>{
     io.to(socket.lobby).emit("current_turn", lobbies[socket.lobby].currentTurn);
   });
 
+  socket.on("checkmate", () =>{
+    io.to(socket.lobby).emit("isCheckmate");
+  });
   socket.on("new_move", (move) =>{
     io.to(socket.lobby).emit("new_move", move);
   });
