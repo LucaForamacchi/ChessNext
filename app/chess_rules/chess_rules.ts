@@ -105,7 +105,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
             }
         
         case 'K': // Re 
-            if ((deltax <= 1 && deltay <= 1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
+            if ((deltax <= 1 && deltay <= 1 && deltax >= -1 && deltay >= -1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
                 return true; // La mossa è valida
             } else {
                 return false; // La mossa non è valida
@@ -125,7 +125,9 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
             // Se la cella contiene un pezzo del colore opposto
-            if ((cells[i][j].toUpperCase()===cells[i][j] && attackingColor==="white") || (cells[i][j].toLowerCase()===cells[i][j] && attackingColor==="black")) {
+            const piece = cells[i][j];
+            if(piece==='' || (i===row && j === col)){continue;}
+            if ((piece.toUpperCase() === piece && defendingColor === "white") || (piece.toLowerCase() === piece && defendingColor === "black")) {
                 // Verifica se il pezzo può muoversi sulla posizione specificata
                 if (isValidMove(i, j, row, col, cells)) {
                     return true; // La posizione è sotto attacco
@@ -139,14 +141,35 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
 }
 
 
+
 export function isCheckMate(kingRow: number, kingCol: number, kingColor: string, cells: string[][]) {
     if (!isUnderAttack(kingRow, kingCol, kingColor, cells)) {
         return false; // Il re non è sotto scacco, quindi non c'è scacco matto
     } else {
-        if((!isValidMove(kingRow, kingCol, kingRow+1, kingCol, cells)) && (!isValidMove(kingRow, kingCol, kingRow, kingCol+1, cells)) && (!isValidMove(kingRow, kingCol, kingRow+1, kingCol+1, cells)) && (!isValidMove(kingRow, kingCol, kingRow-1, kingCol, cells)) && (!isValidMove(kingRow, kingCol, kingRow, kingCol-1, cells)) && (!isValidMove(kingRow, kingCol, kingRow-1, kingCol-1, cells)) && (!isValidMove(kingRow, kingCol, kingRow-1, kingCol+1, cells)) && (!isValidMove(kingRow, kingCol, kingRow+1, kingCol-1, cells))){
-            return true;
+        // Itera attraverso tutte le possibili mosse del re e verifica se in almeno una di esse il re non è più sotto scacco
+        for (let rowOffset = -1; rowOffset <= 1; rowOffset++) {
+            for (let colOffset = -1; colOffset <= 1; colOffset++) {
+                // Ignora la posizione attuale del re
+                if (rowOffset === 0 && colOffset === 0) {
+                    continue;
+                }
+                const newRow = kingRow + rowOffset;
+                const newCol = kingCol + colOffset;
+                // Verifica se la mossa è valida e se dopo la mossa il re non è più sotto scacco
+                if (isValidMove(kingRow, kingCol, newRow, newCol, cells)) {
+                    const cell2 = cells;
+                    cell2[newRow][newCol] = kingColor === "white" ? "K" : "k";
+                    cell2[kingRow][kingCol] = '';
+                    if(!isUnderAttack(newRow, newCol, kingColor, cell2)){
+                        // Se una mossa è possibile e il re non è più sotto scacco, non c'è scacco matto
+                        return false;
+                    }
+                    
+                }
+            }
         }
-        else{return false;}
+        // Se non ci sono mosse valide in cui il re non è sotto scacco, allora c'è scacco matto
+        return true;
     }
 }
 

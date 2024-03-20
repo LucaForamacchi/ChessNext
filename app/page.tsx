@@ -27,7 +27,7 @@ export default function Page() {
           1vs1
         </button>
       </Link>
-      <Link href="/scacchiera" passHref>
+      <Link href="/bot" passHref>
         <button
           style={{ margin: '10px', padding: '10px 20px', backgroundColor: hover1vsBot ? '#218838' : '#28a745', color: 'white', borderRadius: '5px', fontSize: '18px', border: 'none', cursor: 'pointer' }}
           onMouseEnter={() => setHover1vsBot(true)}

@@ -113,8 +113,13 @@ export default function Home() {
     
         return () => clearInterval(interval);
       }
-      
+
+      if (!myturn) {
+        makeComputerMove();
+        setTurn(true); // Dopo che il bot ha fatto la sua mossa, è di nuovo il turno del giocatore
+        }
       socket.emit("checkmate");
+      
     }
   }, [socket, moves]);
   
@@ -151,9 +156,11 @@ export default function Home() {
         setCells(newCells);
         setSelectedCell(null);
         socket?.emit("update_board", newCells);
+        setTurn(false);
       } else {
           setSelectedCell({ rowIndex, colIndex });
       }
+      
     }
 };
   
@@ -163,6 +170,35 @@ export default function Home() {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
+  const makeComputerMove = () => {
+    const validMoves = [];
+    // Scansiona tutte le celle per trovare le mosse valide
+    for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+      for (let colIndex = 0; colIndex < 8; colIndex++) {
+        if (cells[rowIndex][colIndex] !== '' && ((myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toUpperCase() && colour === "white") || (myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toLowerCase() && colour === "black"))) {
+          for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+              if (isValidMove(rowIndex, colIndex, i, j, cells)) {
+                validMoves.push({ from: { row: rowIndex, col: colIndex }, to: { row: i, col: j } });
+              }
+            }
+          }
+        }
+      }
+    }
+  
+    // Se ci sono mosse valide, seleziona una a caso
+    if (validMoves.length > 0) {
+        console.log("aaaaaaaaaaaaaaaaaaaaaa");
+      const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+      const { from, to } = randomMove;
+      const move = `${letters[from.col]}${from.row + 1} => ${letters[to.col]}${to.row + 1}`;
+      handleCellClick(from.row, from.col);
+      handleCellClick(to.row, to.col);
+      socket?.emit("new_move", move);
+    }
+  };
+  
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: '#c3e6cb' }}>
       <div className="button-wrapper" style={{ position: 'relative', alignSelf: 'flex-end', marginRight: '10px', marginTop: '10px' }}>

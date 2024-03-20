@@ -80,7 +80,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("checkmate", () =>{
-    io.to(socket.lobby).emit("isCheckmate");
+    io.to(socket.lobby).emit("isCheckMate");
   });
   socket.on("new_move", (move) =>{
     io.to(socket.lobby).emit("new_move", move);
