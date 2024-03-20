@@ -64,17 +64,17 @@ export default function Home() {
       });
       socket.on("update_board", (newCells) => {
         setCells(newCells);
-        socket.emit("turn");
+        //socket.emit("turn");
         
       });
-      socket.on("current_turn", (currentTurn) => {
-        // Verifica se il turno corrente appartiene al socket corrente
-        const isMyTurn = currentTurn === socket.id;
-        (i%2)===0 ? setColour("black") : setColour("white");
-        setI(i+1);
-        // Imposta il turno corrente
-        setTurn(isMyTurn);
-      });
+      //socket.on("current_turn", (currentTurn) => {
+      //  // Verifica se il turno corrente appartiene al socket corrente
+      //  const isMyTurn = currentTurn === socket.id;
+      //  (i%2)===0 ? setColour("black") : setColour("white");
+      //  setI(i+1);
+      //  // Imposta il turno corrente
+      //  setTurn(isMyTurn);
+      //});
 
       socket.on("isCheckMate", () => {
         const whiteKingPosition = findpiece("K", 'white', cells);
@@ -175,12 +175,12 @@ export default function Home() {
     // Scansiona tutte le celle per trovare le mosse valide
     for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
       for (let colIndex = 0; colIndex < 8; colIndex++) {
-        if (cells[rowIndex][colIndex] !== '' && ((myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toUpperCase() && colour === "white") || (myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toLowerCase() && colour === "black"))) {
+        if (cells[rowIndex][colIndex] !== '' && ((!myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toUpperCase() && colour === "black") || (!myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toLowerCase() && colour === "white"))) {
           for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
               if (isValidMove(rowIndex, colIndex, i, j, cells)) {
                 validMoves.push({ from: { row: rowIndex, col: colIndex }, to: { row: i, col: j } });
-              }
+              } 
             }
           }
         }
@@ -189,13 +189,13 @@ export default function Home() {
   
     // Se ci sono mosse valide, seleziona una a caso
     if (validMoves.length > 0) {
-        console.log("aaaaaaaaaaaaaaaaaaaaaa");
       const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
       const { from, to } = randomMove;
       const move = `${letters[from.col]}${from.row + 1} => ${letters[to.col]}${to.row + 1}`;
-      handleCellClick(from.row, from.col);
-      handleCellClick(to.row, to.col);
+      cells[to.row][to.col]=cells[from.row][from.col];
+      cells[from.row][from.col] = '';
       socket?.emit("new_move", move);
+      socket?.emit("update_board", cells);
     }
   };
   

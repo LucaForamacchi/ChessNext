@@ -2,54 +2,108 @@
 //lettere maiuscole bianco, minuscole nero
 export function isValidMove(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][]) {
     const piece = cells[startRow][startCol];
+    const destinationPiece = cells[endRow][endCol]; // Pezzo nella posizione di destinazione
     const deltax = Math.abs(startCol - endCol);
     const deltay = Math.abs(startRow - endRow);
-    const deltaX = Math.abs(endCol -startCol);
+    const deltaX = Math.abs(endCol - startCol);
     const deltaY = Math.abs(endRow - startRow);
 
-    if (piece === 'P'){//pedone bianco
-        if (startCol === endCol) {
-            if ((deltaY === 1 && cells[endRow][endCol] === '') || (startRow === 1 && deltaY === 2 && cells[endRow][endCol] === '' && cells[endRow - 1][endCol] === '')) {
-                return true;
-            }
-        } else if ((deltaX === 1 || deltax === -1) && deltaY === 1 && cells[endRow][endCol] !== '' && cells[endRow][endCol] !== cells[startRow][startCol]) {
-            return true; // mangiare
-        }
-        
+    // Verifica se la destinazione è la stessa posizione di partenza per evitare che il pezzo vada su se stesso
+    if (startRow === endRow && startCol === endCol) {
+        return false;
     }
-    else if (piece === 'p'){//pedone nero
-        if (startCol === endCol) {
-            if ((deltaY === 1 && cells[endRow][endCol] === '') || (startRow === 6 && deltaY === 2 && cells[endRow][endCol] === '' && cells[endRow + 1][endCol] === '')) {
-                return true;
-            }
-        } else if ((deltaX === 1 || deltax === -1) && deltaY === 1 && cells[endRow][endCol] !== '' && cells[endRow][endCol] !== cells[startRow][startCol]) {
-            return true; // mangiare
+    if(destinationPiece!==''){
+        // Verifica se un pezzo bianco vuole muoversi su un altro pezzo bianco
+        if (piece.toUpperCase() === piece && destinationPiece.toUpperCase() === destinationPiece) {
+            return false;
         }
-        
-    }
 
+        // Verifica se un pezzo nero vuole muoversi su un altro pezzo nero
+        if (piece.toLowerCase() === piece && destinationPiece.toLowerCase() === destinationPiece) {
+            return false;
+        }
+    }
+    
+
+    if (piece === 'P'){//pedone bianco
+        if (startCol === endCol && endRow > startRow) { // Muovimento in avanti
+            if ((deltay === 1 && destinationPiece === '') || (startRow === 1 && deltaY === 2 && destinationPiece === '' && cells[endRow - 1][endCol] === '')) {
+                return true;
+            }
+        } else if ((deltaX === 1 || deltaX === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
+            return true; // mangiare
+        }
+        
+    } else if (piece === 'p'){//pedone nero
+        if (startCol === endCol && endRow < startRow) { // Muovimento in avanti
+            if ((deltay === 1 && destinationPiece === '') || (startRow === 6 && deltaY === 2 && destinationPiece === '' && cells[endRow + 1][endCol] === '')) {
+                return true;
+            }
+        } else if ((deltaX === 1 || deltaX === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
+            return true; // mangiare
+        }
+    }
+    
     switch (piece.toLocaleUpperCase()) {
         case 'N': // Cavallo
-        if ((Math.abs(deltay) + Math.abs(deltax) === 3) &&
-        ((Math.abs(deltay) === 1 && Math.abs(deltax) === 2) || (Math.abs(deltay) === 2 && Math.abs(deltax) === 1))) {
-        return true;
-        }
-        
-        case 'B': // Alfiere 
-            if (deltax === deltay) { // Controllo se si sta muovendo lungo una diagonale
-                // Controllo se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione
-                let rowIncrement = (endRow > startRow) ? 1 : -1; // Incremento della riga
-                let colIncrement = (endCol > startCol) ? 1 : -1; // Incremento della colonna
-                for (let i = startRow + rowIncrement, j = startCol + colIncrement; i !== endRow; i += rowIncrement, j += colIncrement) {
-                    if (cells[i][j] !== '') { // Se c'è un pezzo in una cella intermedia
-                        return false; // La mossa non è valida
-                    }
-                }
-                return true; // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
-            } else {
-                return false; // Se non si muove lungo una diagonale, la mossa non è valida
+            if ((Math.abs(deltay) === 1 && Math.abs(deltax) === 2) || (Math.abs(deltay) === 2 && Math.abs(deltax) === 1)) {
+                return true; // Mosse valide a "L" del cavallo
             }
+
         
+        case 'B': // Alfiere
+                // Controllo se si sta muovendo lungo una diagonale
+                if (Math.abs(deltax) === Math.abs(deltay)) {
+                    // Controlla se ci sono pezzi lungo la diagonale
+                    //basso a destra
+                    if((endRow>startRow) && (endCol>startCol)){
+                        for (let i = startRow; i < endRow; i++) {
+                            for (let j = startCol; j < endCol; j++) {
+                                if (cells[i][j] !== '' && i === j) {
+                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
+                                }
+                            }
+                        }
+                    }
+                    //basso a sinistra
+                    else if ((endRow>startRow) && (startCol>endCol)){
+                        for (let i = startRow; i < endRow; i++) {
+                            for (let j = endCol; j < startCol; j++) {
+                                if (cells[i][j] !== '' && i === j) {
+                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
+                                }
+                            }
+                        }
+                    }
+                    
+                    //alto a sinistra
+                    else if ((startRow>endRow) && (startCol>endCol)){
+                        for (let i = endRow; i < startRow; i++) {
+                            for (let j = endCol; j < startCol; j++) {
+                                if (cells[i][j] !== '' && i === j) {
+                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
+                                }
+                            }
+                        }
+                    }
+                    
+                    //alto a destra
+                    else if ((startRow>endRow) && (endCol>startCol)){
+                        for (let i = endRow; i < startRow; i++) {
+                            for (let j = startCol; j < endCol; j++) {
+                                if (cells[i][j] !== '' && i === j) {
+                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
+                                }
+                            }
+                        }
+                    }
+                    // La mossa è valida se non ci sono pezzi lungo la diagonale
+                    return true;
+                } else {
+                    // Se non si muove lungo una diagonale, la mossa non è valida
+                    return false;
+                }
+
         case 'R': // Torre 
             if (startRow === endRow || startCol === endCol) { // Controllo se si muove lungo una riga o una colonna
                 // Controllo se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione
