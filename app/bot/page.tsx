@@ -26,6 +26,7 @@ export default function Home() {
   const [myturn, setTurn] = useState(true);
   const [i, setI] = useState<number>(0);
   const [resultMessage, setResultMessage] = useState<string>("");
+  const [end, setEnd] = useState(false);
 
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -83,14 +84,18 @@ export default function Home() {
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
           if (colour === "white") {
             setResultMessage("Lose");
+            setEnd(true);
           } else {
             setResultMessage("Win");
+            setEnd(true);
           }
         } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
           if (colour === "black") {
             setResultMessage("Lose");
+            setEnd(true);
           } else {
             setResultMessage("Win");
+            setEnd(true);
           }
         }
       });
@@ -114,7 +119,7 @@ export default function Home() {
         return () => clearInterval(interval);
       }
 
-      if (!myturn) {
+      if (!myturn && !end) {
         makeComputerMove();
         setTurn(true); // Dopo che il bot ha fatto la sua mossa, è di nuovo il turno del giocatore
         }
@@ -125,7 +130,7 @@ export default function Home() {
   
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
-    if (!lobby) {
+    if (!lobby || end) {
         return;
     }
     const piece = cells[rowIndex][colIndex];
@@ -200,8 +205,8 @@ export default function Home() {
   };
   
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: '#c3e6cb' }}>
-      <div className="button-wrapper" style={{ position: 'relative', alignSelf: 'flex-end', marginRight: '10px', marginTop: '10px' }}>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: '#c3e6cb', position: 'relative' }}>
+      <div className="button-wrapper" style={{ position: 'absolute', top: 10, right: 10 }}>
         <Link href="/" passHref>
           <button
             style={{ padding: '10px 20px', backgroundColor: hover1vs1 ? '#218838' : '#28a745', color: 'white', borderRadius: '5px', fontSize: '18px', border: 'none', cursor: 'pointer' }}
@@ -219,7 +224,7 @@ export default function Home() {
             <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{number}</div>
           ))}
         </div>
-        <div className="grid grid-cols-8">
+        <div className="grid grid-cols-8 relative"> {/* Aggiunto il relative positioning */}
           {letters.map((letter, index) => (
             <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{letter}</div>
           ))}
@@ -229,12 +234,20 @@ export default function Home() {
                 key={`${rowIndex}-${colIndex}`}
                 className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12`}
                 style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${rowIndex + 1}`) ? 'yellow' : undefined }}
-                onClick={() => {handleCellClick(rowIndex, colIndex);}}
+                onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
                 {cell !== '' ? cell : ""}
               </div>
             ))
           ))}
+          {/* Sovrapposizione del messaggio di vittoria */}
+          {resultMessage && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className={`bg-white p-4 rounded shadow ${resultMessage === 'Win' ? 'text-green-600' : 'text-red-600'}`}>
+                <h2>{'You ' + resultMessage}</h2>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="mt-4">
@@ -246,11 +259,6 @@ export default function Home() {
       <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px' }}>
         <h2 style={{ margin: '0' }}>Timer: {formatTime(timer)}</h2>
       </div>
-
-      <div className="result-message">
-        {resultMessage && <h2>{resultMessage}</h2>}
-      </div>
-
     </main>
   );
 }

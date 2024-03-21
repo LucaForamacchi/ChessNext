@@ -48,63 +48,26 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
         case 'N': // Cavallo
             if ((Math.abs(deltay) === 1 && Math.abs(deltax) === 2) || (Math.abs(deltay) === 2 && Math.abs(deltax) === 1)) {
                 return true; // Mosse valide a "L" del cavallo
-            }
+            } else{return false;}
 
         
         case 'B': // Alfiere
-                // Controllo se si sta muovendo lungo una diagonale
-                if (Math.abs(deltax) === Math.abs(deltay)) {
-                    // Controlla se ci sono pezzi lungo la diagonale
-                    //basso a destra
-                    if((endRow>startRow) && (endCol>startCol)){
-                        for (let i = startRow; i < endRow; i++) {
-                            for (let j = startCol; j < endCol; j++) {
-                                if (cells[i][j] !== '' && i === j) {
-                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
-                                }
-                            }
-                        }
+            // Controllo se si sta muovendo lungo una diagonale
+            if (Math.abs(deltax) === Math.abs(deltay)) {
+                // Controllo se ci sono pezzi lungo la diagonale in entrambe le direzioni
+                let rowIncrement = (endRow > startRow) ? 1 : -1; // Incremento della riga
+                let colIncrement = (endCol > startCol) ? 1 : -1; // Incremento della colonna
+                for (let i = startRow + rowIncrement, j = startCol + colIncrement; i !== endRow; i += rowIncrement, j += colIncrement) {
+                    if (cells[i][j] !== '') { // Se c'è un pezzo lungo la diagonale
+                        return false; // La mossa non è valida
                     }
-                    //basso a sinistra
-                    else if ((endRow>startRow) && (startCol>endCol)){
-                        for (let i = startRow; i < endRow; i++) {
-                            for (let j = endCol; j < startCol; j++) {
-                                if (cells[i][j] !== '' && i === j) {
-                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
-                                }
-                            }
-                        }
-                    }
-                    
-                    //alto a sinistra
-                    else if ((startRow>endRow) && (startCol>endCol)){
-                        for (let i = endRow; i < startRow; i++) {
-                            for (let j = endCol; j < startCol; j++) {
-                                if (cells[i][j] !== '' && i === j) {
-                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
-                                }
-                            }
-                        }
-                    }
-                    
-                    //alto a destra
-                    else if ((startRow>endRow) && (endCol>startCol)){
-                        for (let i = endRow; i < startRow; i++) {
-                            for (let j = startCol; j < endCol; j++) {
-                                if (cells[i][j] !== '' && i === j) {
-                                    return false; // La mossa non è valida se c'è un pezzo lungo la diagonale
-                                }
-                            }
-                        }
-                    }
-                    // La mossa è valida se non ci sono pezzi lungo la diagonale
-                    return true;
-                } else {
-                    // Se non si muove lungo una diagonale, la mossa non è valida
-                    return false;
                 }
-
-        case 'R': // Torre 
+                return true; // Se non ci sono pezzi lungo la diagonale, la mossa è valida
+            } else {
+                return false; // Se non si muove lungo una diagonale, la mossa non è valida
+            }
+        
+        case 'R': // Torre
             if (startRow === endRow || startCol === endCol) { // Controllo se si muove lungo una riga o una colonna
                 // Controllo se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione
                 if (startRow === endRow) { // Si sta muovendo lungo una riga
@@ -127,9 +90,10 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                 return false; // Se non si muove lungo una riga o una colonna, la mossa non è valida
             }
         
-        case 'Q': // Regina 
-            if ((startRow === endRow || startCol === endCol) || (deltax === deltay)) { 
-                // Controllo se si muove lungo una riga o una colonna oppure lungo una diagonale
+        
+        case 'Q': // Regina
+            if ((startRow === endRow || startCol === endCol) || (Math.abs(deltax) === Math.abs(deltay))) { 
+                // Controllo se si muove lungo una riga, una colonna o una diagonale
                 if (startRow === endRow) { // Si sta muovendo lungo una riga
                     let colIncrement = (endCol > startCol) ? 1 : -1; // Incremento della colonna
                     for (let j = startCol + colIncrement; j !== endCol; j += colIncrement) {
@@ -157,6 +121,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
             } else {
                 return false; // Se non si muove lungo una riga, una colonna o una diagonale, la mossa non è valida
             }
+        
         
         case 'K': // Re 
             if ((deltax <= 1 && deltay <= 1 && deltax >= -1 && deltay >= -1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
@@ -209,6 +174,7 @@ export function isCheckMate(kingRow: number, kingCol: number, kingColor: string,
                 }
                 const newRow = kingRow + rowOffset;
                 const newCol = kingCol + colOffset;
+                if (newRow > 7 || newRow < 0 || newCol > 7 || newCol < 0){continue;}
                 // Verifica se la mossa è valida e se dopo la mossa il re non è più sotto scacco
                 if (isValidMove(kingRow, kingCol, newRow, newCol, cells)) {
                     const cell2 = cells;
