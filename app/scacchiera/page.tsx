@@ -110,38 +110,37 @@ export default function Home() {
       socket.on("new_move", (new_move) =>{
         setMoves([...moves, new_move]);
       });
-  
-      if (myturn && moves.length !== 0 && moves.length % 2 === 0) {
-        // Avvia l'intervallo solo se è il turno del giocatore bianco
-        const interval = setInterval(() => {
-          setTimer(prevTimer => {
-            if (prevTimer > 0) {
-              return prevTimer - 1;
-            } else {
-              clearInterval(interval);
-              return 0;
-            }
-          });
-        }, 1000);
-    
-        return () => clearInterval(interval);
-      } else if (!myturn) {
-        // Avvia l'intervallo solo se è il turno del giocatore nero
-        const interval = setInterval(() => {
-          setTimer(prevTimer => {
-            if (prevTimer > 0) {
-              return prevTimer - 1;
-            } else {
-              clearInterval(interval);
-              return 0;
-            }
-          });
-        }, 1000);
-    
-        return () => clearInterval(interval);
-      }
       
       socket.emit("checkmate");
+      let intervalId: NodeJS.Timeout;
+      const decrementTimer = () => {
+        setTimer(prevTimer => {
+          if (prevTimer > 0) {
+            return prevTimer - 1;
+          } else {
+            clearInterval(intervalId);
+            return 0;
+          }
+        });
+      };
+  
+      // Avvia l'intervallo solo se è il tuo turno
+      if (!myturn && timer > 0) {
+        intervalId = setInterval(decrementTimer, 1000);
+      }
+      if (timer === 0){
+        if(colour === "white"){
+          setResultMessage("Lose");
+          setEnd(true);
+        }
+        else if (colour === "black"){
+          setResultMessage("Lose");
+          setEnd(true);
+        }
+      }
+      // Pulisci l'intervallo quando il componente viene smontato o quando non è più il tuo turno
+      return () => clearInterval(intervalId);
+    
     }
   }, [socket, moves]);
   
