@@ -27,7 +27,7 @@ io.on("connection", (socket) => {
         ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
       ],
       // Inizializza il turno corrente quando la lobby viene creata
-      currentTurn: socket.id
+      currentTurn: socket.id,
     };
     socket.join(newLobby);
     socket.lobby = newLobby;

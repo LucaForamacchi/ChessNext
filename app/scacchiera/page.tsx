@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove, isCheckMate, findpiece } from '../chess_rules/chess_rules';
+import { isValidMove, isValidCastle, isCheckMate, findpiece } from '../chess_rules/chess_rules';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -27,6 +27,14 @@ export default function Home() {
   const [i, setI] = useState<number>(0);
   const [resultMessage, setResultMessage] = useState<string>("");
   const [end, setEnd] = useState(false);
+  const [WhiteKingHasMoved, setWhiteKingHasMoved] = useState(false);
+  const [BlackKingHasMoved, setBlackKingHasMoved] = useState(false);
+  const [WhiteLRookHasMoved, setWhiteLRookHasMoved] = useState(false);
+  const [WhiteRRookHasMoved, setWhiteRRookHasMoved] = useState(false);
+  const [BlackLRookHasMoved, setBlackLRookHasMoved] = useState(false);
+  const [BlackRRookHasMoved, setBlackRRookHasMoved] = useState(false);
+
+
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -103,7 +111,22 @@ export default function Home() {
         setMoves([...moves, new_move]);
       });
   
-      if (moves.length !== 0 && moves.length % 2 === 0) {
+      if (myturn && moves.length !== 0 && moves.length % 2 === 0) {
+        // Avvia l'intervallo solo se è il turno del giocatore bianco
+        const interval = setInterval(() => {
+          setTimer(prevTimer => {
+            if (prevTimer > 0) {
+              return prevTimer - 1;
+            } else {
+              clearInterval(interval);
+              return 0;
+            }
+          });
+        }, 1000);
+    
+        return () => clearInterval(interval);
+      } else if (!myturn) {
+        // Avvia l'intervallo solo se è il turno del giocatore nero
         const interval = setInterval(() => {
           setTimer(prevTimer => {
             if (prevTimer > 0) {
@@ -155,10 +178,68 @@ export default function Home() {
         setCells(newCells);
         setSelectedCell(null);
         socket?.emit("update_board", newCells);
-      } else {
+        if (temp === 'K'){setWhiteKingHasMoved(true);}
+        else if (temp === "k"){setBlackKingHasMoved(true);}
+        else if (temp === "R" && selectedCell.colIndex === 0){setWhiteLRookHasMoved(true);}
+        else if (temp === "R" && selectedCell.colIndex === 7){setWhiteRRookHasMoved(true);}
+        else if (temp === "r" && selectedCell.colIndex === 7){setBlackLRookHasMoved(true);}
+        else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
+        
+      } else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
+        // Arrocco bianco corto
+        if (rowIndex === 0 && colIndex === 2) {
+          // Sposta il re
+          newCells[0][2] = 'K';
+          newCells[0][4] = '';
+          // Sposta la torre
+          newCells[0][3] = 'R';
+          newCells[0][0] = '';
+          setWhiteRRookHasMoved(true);
+      }
+      // Arrocco bianco lungo
+      else if (rowIndex === 0 && colIndex === 6) {
+          // Sposta il re
+          newCells[0][6] = 'K';
+          newCells[0][4] = '';
+          // Sposta la torre
+          newCells[0][5] = 'R';
+          newCells[0][7] = '';
+          setWhiteLRookHasMoved(true);
+      }
+      setWhiteKingHasMoved(true); // Imposta il re bianco come mosso
+      setCells(newCells);
+      setSelectedCell(null);
+      socket?.emit("update_board", newCells);
+    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
+        // Arrocco nero corto
+        if (rowIndex === 7 && colIndex === 2) {
+          // Sposta il re
+          newCells[7][2] = 'k';
+          newCells[7][4] = '';
+          // Sposta la torre
+          newCells[7][3] = 'r';
+          newCells[7][0] = '';
+          setBlackLRookHasMoved(true);
+          }
+          // Arrocco nero lungo
+          else if (rowIndex === 7 && colIndex === 6) {
+              // Sposta il re
+              newCells[7][6] = 'k';
+              newCells[7][4] = '';
+              // Sposta la torre
+              newCells[7][5] = 'r';
+              newCells[7][7] = '';
+              setBlackRRookHasMoved(true);
+          }
+          setCells(newCells);
+          setSelectedCell(null);
+          socket?.emit("update_board", newCells);
+          setBlackKingHasMoved(true); // Imposta il re nero come mosso
+      }
+      }
+      else {
           setSelectedCell({ rowIndex, colIndex });
       }
-    }
 };
   
   const formatTime = (seconds: number): string => {

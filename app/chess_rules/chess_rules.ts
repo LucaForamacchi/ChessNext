@@ -135,6 +135,49 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     }
 }
 
+export function isValidCastle(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][], kingMoved: boolean, LRookMoved: boolean, RRookMoved: boolean) {
+    const piece = cells[startRow][startCol];
+    const destinationPiece = cells[endRow][endCol]; // Pezzo nella posizione di destinazione
+
+    // Verifica se la mossa è una mossa di arrocco
+    if (piece === 'K' && !kingMoved) { // Arrocco bianco
+        if (endCol === 2 && !RRookMoved) { // Arrocco corto
+            if (cells[0][1] === '' && cells[0][2] === '' && cells[0][3] === '' && cells[0][0] === 'R') {
+                // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
+                if (!isUnderAttack(0, 4, 'white', cells) && !isUnderAttack(0, 3, 'white', cells) && !isUnderAttack(0, 2, 'white', cells)) {
+                    return true;
+                }
+            }
+        } else if (endCol === 6 && !LRookMoved) { // Arrocco lungo
+            if (cells[0][5] === '' && cells[0][6] === '' && cells[0][7] === 'R') {
+                // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
+                if (!isUnderAttack(0, 4, 'white', cells) && !isUnderAttack(0, 5, 'white', cells) && !isUnderAttack(0, 6, 'white', cells)) {
+                    return true;
+                }
+            }
+        }
+    } else if (piece === 'k' && !kingMoved) { // Arrocco nero
+        if (endCol === 2 && !LRookMoved) { // Arrocco corto
+            if (cells[7][1] === '' && cells[7][2] === '' && cells[7][3] === '' && cells[7][0] === 'r') {
+                // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
+                if (!isUnderAttack(7, 4, 'black', cells) && !isUnderAttack(7, 3, 'black', cells) && !isUnderAttack(7, 2, 'black', cells)) {
+                    return true;
+                }
+            }
+        } else if (endCol === 6 && !RRookMoved) { // Arrocco lungo
+            if (cells[7][5] === '' && cells[7][6] === '' && cells[7][7] === 'r') {
+                // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
+                if (!isUnderAttack(7, 4, 'black', cells) && !isUnderAttack(7, 5, 'black', cells) && !isUnderAttack(7, 6, 'black', cells)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false; // La mossa non è un arrocco valido
+}
+
+
 // Funzione per verificare se una posizione è sotto attacco
 export function isUnderAttack(row: number, col: number, attackingColor: string, cells: string[][]) {
     // Trova il colore opposto
