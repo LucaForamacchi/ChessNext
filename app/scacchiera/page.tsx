@@ -7,14 +7,14 @@ import { isValidMove, isValidCastle, isCheckMate, findpiece } from '../chess_rul
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [cells, setCells] = useState<string[][]>([
-    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    Array(8).fill(''),
-    Array(8).fill(''),
-    Array(8).fill(''),
-    Array(8).fill(''),
+    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
     ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+    Array(8).fill(''),
+    Array(8).fill(''),
+    Array(8).fill(''),
+    Array(8).fill(''),
+    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
   ]);
   
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
@@ -33,11 +33,10 @@ export default function Home() {
   const [WhiteRRookHasMoved, setWhiteRRookHasMoved] = useState(false);
   const [BlackLRookHasMoved, setBlackLRookHasMoved] = useState(false);
   const [BlackRRookHasMoved, setBlackRRookHasMoved] = useState(false);
-
-
+  const [player1, setplayer1] = useState("");
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-  const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
+  const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
   useEffect(() => {
     const newSocket = io("http://localhost:3000");
     setSocket(newSocket);
@@ -57,7 +56,6 @@ export default function Home() {
     newSocket.on("no_lobby_available", () => {
       // Se nessuna lobby è disponibile, crea una nuova lobby
       newSocket.emit("create_lobby");
-      
     });
 
     return () => {
@@ -67,8 +65,9 @@ export default function Home() {
 
   useEffect(() => {
     if (socket) {
-      socket.on("lobby_joined", (lobbyName) => {
+      socket.on("lobby_joined", (lobbyName, creatorid) => {
         setLobby(lobbyName);
+        setplayer1(creatorid[0]);
       });
       socket.on("update_board", (newCells) => {
         setCells(newCells);
@@ -194,7 +193,7 @@ export default function Home() {
           newCells[0][3] = 'R';
           newCells[0][0] = '';
           setWhiteRRookHasMoved(true);
-          socket?.emit("new_move", "O-O-O");
+          socket?.emit("new_move", `${letters[selectedCell.colIndex]}${selectedCell.rowIndex} => ${letters[colIndex]}${rowIndex + 1}`);
       }
       // Arrocco bianco corto
       else if (rowIndex === 0 && colIndex === 6) {
@@ -303,6 +302,9 @@ export default function Home() {
       {lobby && (
         <h2>You are in lobby: {lobby}</h2>
       )}
+      {(
+  <button >{player1}</button>
+)}
       <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px' }}>
         <h2 style={{ margin: '0' }}>Timer: {formatTime(timer)}</h2>
       </div>

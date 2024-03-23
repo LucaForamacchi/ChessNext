@@ -26,8 +26,8 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     
 
     if (piece === 'P'){//pedone bianco
-        if (startCol === endCol && endRow > startRow) { // Muovimento in avanti
-            if ((deltay === 1 && destinationPiece === '') || (startRow === 1 && deltaY === 2 && destinationPiece === '' && cells[endRow - 1][endCol] === '')) {
+        if (startCol === endCol && endRow < startRow) { // Muovimento in avanti
+            if ((deltay === 1 && destinationPiece === '') || (startRow === 6 && deltaY === 2 && destinationPiece === '' && cells[endRow + 1][endCol] === '')) {
                 return true;
             }
         } else if ((deltaX === 1 || deltaX === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
@@ -35,8 +35,8 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
         }
         
     } else if (piece === 'p'){//pedone nero
-        if (startCol === endCol && endRow < startRow) { // Muovimento in avanti
-            if ((deltay === 1 && destinationPiece === '') || (startRow === 6 && deltaY === 2 && destinationPiece === '' && cells[endRow + 1][endCol] === '')) {
+        if (startCol === endCol && endRow > startRow) { // Muovimento in avanti
+            if ((deltay === 1 && destinationPiece === '') || (startRow === 1 && deltaY === 2 && destinationPiece === '' && cells[endRow - 1][endCol] === '')) {
                 return true;
             }
         } else if ((deltaX === 1 || deltaX === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {

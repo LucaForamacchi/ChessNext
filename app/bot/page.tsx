@@ -7,14 +7,14 @@ import { isValidMove, isCheckMate, findpiece } from '../chess_rules/chess_rules'
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [cells, setCells] = useState<string[][]>([
-    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
-    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    Array(8).fill(''),
-    Array(8).fill(''),
-    Array(8).fill(''),
-    Array(8).fill(''),
+    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
     ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+    Array(8).fill(''),
+    Array(8).fill(''),
+    Array(8).fill(''),
+    Array(8).fill(''),
+    ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
   ]);
   
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
@@ -30,7 +30,7 @@ export default function Home() {
 
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-  const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
+  const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
   useEffect(() => {
     const newSocket = io("http://localhost:3000");
     setSocket(newSocket);
@@ -65,17 +65,8 @@ export default function Home() {
       });
       socket.on("update_board", (newCells) => {
         setCells(newCells);
-        //socket.emit("turn");
         
       });
-      //socket.on("current_turn", (currentTurn) => {
-      //  // Verifica se il turno corrente appartiene al socket corrente
-      //  const isMyTurn = currentTurn === socket.id;
-      //  (i%2)===0 ? setColour("black") : setColour("white");
-      //  setI(i+1);
-      //  // Imposta il turno corrente
-      //  setTurn(isMyTurn);
-      //});
 
       socket.on("isCheckMate", () => {
         const whiteKingPosition = findpiece("K", 'white', cells);

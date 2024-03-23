@@ -52,7 +52,7 @@ io.on("connection", (socket) => {
         joinedLobby = true;
         console.log(`Player ${socket.id} joined lobby ${lobby}`);
         // Invia il messaggio "lobby_joined" al client
-        socket.emit("lobby_joined", lobby);
+        socket.emit("lobby_joined", lobby, lobbies[lobby].players);
         break;
       }
     }
