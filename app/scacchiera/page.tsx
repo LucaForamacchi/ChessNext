@@ -185,7 +185,7 @@ export default function Home() {
         else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
         
       } else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
-        // Arrocco bianco corto
+        // Arrocco bianco lungo
         if (rowIndex === 0 && colIndex === 2) {
           // Sposta il re
           newCells[0][2] = 'K';
@@ -194,8 +194,9 @@ export default function Home() {
           newCells[0][3] = 'R';
           newCells[0][0] = '';
           setWhiteRRookHasMoved(true);
+          socket?.emit("new_move", "O-O-O");
       }
-      // Arrocco bianco lungo
+      // Arrocco bianco corto
       else if (rowIndex === 0 && colIndex === 6) {
           // Sposta il re
           newCells[0][6] = 'K';
@@ -204,6 +205,7 @@ export default function Home() {
           newCells[0][5] = 'R';
           newCells[0][7] = '';
           setWhiteLRookHasMoved(true);
+          socket?.emit("new_move", "O-O");
       }
       setWhiteKingHasMoved(true); // Imposta il re bianco come mosso
       setCells(newCells);
@@ -219,6 +221,7 @@ export default function Home() {
           newCells[7][3] = 'r';
           newCells[7][0] = '';
           setBlackLRookHasMoved(true);
+          socket?.emit("new_move", "o-o");
           }
           // Arrocco nero lungo
           else if (rowIndex === 7 && colIndex === 6) {
@@ -229,6 +232,7 @@ export default function Home() {
               newCells[7][5] = 'r';
               newCells[7][7] = '';
               setBlackRRookHasMoved(true);
+              socket?.emit("new_move", "o-o-o");
           }
           setCells(newCells);
           setSelectedCell(null);
