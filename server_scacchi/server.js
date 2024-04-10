@@ -33,7 +33,7 @@ io.on("connection", (socket) => {
     socket.lobby = newLobby;
     console.log(`Player ${socket.id} created and joined new lobby ${newLobby}`);
     // Invia il messaggio "lobby_joined" al client
-    socket.emit("lobby_joined", newLobby);
+    socket.emit("lobby_joined", newLobby, [socket.id]);
   };
 
   // Se non ci sono lobby disponibili, crea una nuova lobby per il primo client che si connette
@@ -72,7 +72,6 @@ io.on("connection", (socket) => {
     // Passa il turno al giocatore successivo dopo ogni mossa
     lobbies[socket.lobby].currentTurn = lobbies[socket.lobby].players.find(player => player !== socket.id);
     io.to(socket.lobby).emit("update_board", newBoard);
-    
   });
   
   socket.on("turn", () =>{

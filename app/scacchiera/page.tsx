@@ -22,9 +22,7 @@ export default function Home() {
   const [hover1vs1, setHover] = useState(false);
   const [timer, setTimer] = useState<number>(600);
   const [lobby, setLobby] = useState("");
-  const [colour, setColour] = useState("white");
   const [myturn, setTurn] = useState(true);
-  const [i, setI] = useState<number>(0);
   const [resultMessage, setResultMessage] = useState<string>("");
   const [end, setEnd] = useState(false);
   const [WhiteKingHasMoved, setWhiteKingHasMoved] = useState(false);
@@ -33,6 +31,7 @@ export default function Home() {
   const [WhiteRRookHasMoved, setWhiteRRookHasMoved] = useState(false);
   const [BlackLRookHasMoved, setBlackLRookHasMoved] = useState(false);
   const [BlackRRookHasMoved, setBlackRRookHasMoved] = useState(false);
+  const [clientId, setClientId] = useState<string | null>();
   const [player1, setplayer1] = useState("");
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -42,6 +41,7 @@ export default function Home() {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
+      setClientId(newSocket.id);
       // Quando il socket si connette, controlla se c'è una lobby disponibile
       newSocket.emit("check_lobby");
     });
@@ -72,13 +72,10 @@ export default function Home() {
       socket.on("update_board", (newCells) => {
         setCells(newCells);
         socket.emit("turn");
-        
       });
       socket.on("current_turn", (currentTurn) => {
         // Verifica se il turno corrente appartiene al socket corrente
         const isMyTurn = currentTurn === socket.id;
-        (i%2)===0 ? setColour("black") : setColour("white");
-        setI(i+1);
         // Imposta il turno corrente
         setTurn(isMyTurn);
       });
@@ -88,7 +85,7 @@ export default function Home() {
         const blackKingPosition = findpiece("k", 'black', cells);
       
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
-          if (colour === "white") {
+          if (clientId===player1) {
             setResultMessage("Lose");
             setEnd(true);
           } else {
@@ -96,7 +93,7 @@ export default function Home() {
             setEnd(true);
           }
         } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
-          if (colour === "black") {
+          if (clientId!==player1) {
             setResultMessage("Lose");
             setEnd(true);
           } else {
@@ -128,11 +125,11 @@ export default function Home() {
         intervalId = setInterval(decrementTimer, 1000);
       }
       if (timer === 0){
-        if(colour === "white"){
+        if(clientId===player1){
           setResultMessage("Lose");
           setEnd(true);
         }
-        else if (colour === "black"){
+        else if (clientId!==player1){
           setResultMessage("Lose");
           setEnd(true);
         }
@@ -149,10 +146,10 @@ export default function Home() {
         return;
     }
     const piece = cells[rowIndex][colIndex];
-    
+    console.log(piece);
     if (!selectedCell && piece !== '') {
       // Controlla se è il turno del giocatore corrente
-      if ((myturn && piece === piece.toUpperCase() && colour === "white") || (myturn && piece === piece.toLowerCase() && colour === "black")) {
+      if ((myturn && piece === piece.toUpperCase() && clientId===player1) || (myturn && piece === piece.toLowerCase() && clientId!==player1)) {
         setSelectedCell({ rowIndex, colIndex });
       }
       else {
@@ -305,6 +302,10 @@ export default function Home() {
       {(
   <button >{player1}</button>
 )}
+    {(
+  <button >{clientId}</button>
+)}
+
       <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px' }}>
         <h2 style={{ margin: '0' }}>Timer: {formatTime(timer)}</h2>
       </div>
