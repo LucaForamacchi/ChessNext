@@ -24,7 +24,7 @@ export default function Page() {
           onMouseEnter={() => setHover1vs1(true)}
           onMouseLeave={() => setHover1vs1(false)}
         >
-          1vs1
+          1 vs 1
         </button>
       </Link>
       <Link href="/bot" passHref>
@@ -33,7 +33,7 @@ export default function Page() {
           onMouseEnter={() => setHover1vsBot(true)}
           onMouseLeave={() => setHover1vsBot(false)}
         >
-          1vsbot
+          1 vs Bot
         </button>
       </Link>
     </div>

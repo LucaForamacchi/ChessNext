@@ -247,6 +247,8 @@ export default function Home() {
     return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
   };
 
+  const rotationStyle = clientId !== player1 ? { transform: 'rotate(180deg)' } : {};
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: '#c3e6cb', position: 'relative' }}>
       <div className="button-wrapper" style={{ position: 'absolute', top: 10, right: 10 }}>
@@ -261,25 +263,35 @@ export default function Home() {
         </Link>
       </div>
       <div className="flex">
-        <div className="grid grid-cols-1">
+        <div className="grid grid-cols-1" style={rotationStyle}>
           <div className="p-4 w-12 h-12"></div>
           {numbers.map((number, index) => (
-            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{number}</div>
+            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+              <div style={rotationStyle}>
+               {number} 
+              </div>
+              }</div>
           ))}
         </div>
-        <div className="grid grid-cols-8 relative"> {/* Aggiunto il relative positioning */}
+        <div className="grid grid-cols-8 relative" style={rotationStyle}> {/* Aggiunto il relative positioning */}
           {letters.map((letter, index) => (
-            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{letter}</div>
+            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+              <div style={rotationStyle}>{letter}</div>
+              }</div>
           ))}
           {cells.map((row, rowIndex) => (
             row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12`}
+                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
                 style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${rowIndex + 1}`) ? 'yellow' : undefined }}
                 onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
-                {cell !== '' ? cell : ""}
+                {cell !== '' ? (
+                    <div style={{ transform: clientId !== player1 ? 'rotate(180deg)' : 'none' }}>
+                      {cell}
+                    </div>
+                  ) : ""}
               </div>
             ))
           ))}
