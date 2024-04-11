@@ -158,8 +158,10 @@ export default function Home() {
     } else if (selectedCell) {
       const newCells = [...cells];
       const temp = newCells[selectedCell.rowIndex][selectedCell.colIndex]
+      console.log(temp)
         // Controlla se la mossa è valida rispettando le regole degli scacchi
       if (isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells)) {
+        console.log(selectedCell)
         const move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
         if (newCells[rowIndex][colIndex] !== '') {
             socket?.emit("new_move", move + "+");
@@ -179,29 +181,18 @@ export default function Home() {
         else if (temp === "R" && selectedCell.colIndex === 7){setWhiteRRookHasMoved(true);}
         else if (temp === "r" && selectedCell.colIndex === 7){setBlackLRookHasMoved(true);}
         else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
-        
-      } else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
-        // Arrocco bianco lungo
-        if (rowIndex === 0 && colIndex === 2) {
-          // Sposta il re
-          newCells[0][2] = 'K';
-          newCells[0][4] = '';
-          // Sposta la torre
-          newCells[0][3] = 'R';
-          newCells[0][0] = '';
-          setWhiteRRookHasMoved(true);
-          socket?.emit("new_move", `${letters[selectedCell.colIndex]}${selectedCell.rowIndex} => ${letters[colIndex]}${rowIndex + 1}`);
       }
-      // Arrocco bianco corto
-      else if (rowIndex === 0 && colIndex === 6) {
-          // Sposta il re
-          newCells[0][6] = 'K';
-          newCells[0][4] = '';
-          // Sposta la torre
-          newCells[0][5] = 'R';
-          newCells[0][7] = '';
-          setWhiteLRookHasMoved(true);
+      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
+        // Arrocco bianco corto
+        console.log("rowIndex, colIndex");
+        if (rowIndex === 7 && colIndex === 6) {
+          setWhiteRRookHasMoved(true);
           socket?.emit("new_move", "O-O");
+      }
+      // Arrocco bianco lungo
+      else if (rowIndex === 0 && colIndex === 2) {
+          setWhiteLRookHasMoved(true);
+          socket?.emit("new_move", "O-O-O");
       }
       setWhiteKingHasMoved(true); // Imposta il re bianco come mosso
       setCells(newCells);
@@ -210,23 +201,11 @@ export default function Home() {
     }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
-          // Sposta il re
-          newCells[7][2] = 'k';
-          newCells[7][4] = '';
-          // Sposta la torre
-          newCells[7][3] = 'r';
-          newCells[7][0] = '';
           setBlackLRookHasMoved(true);
           socket?.emit("new_move", "o-o");
           }
           // Arrocco nero lungo
           else if (rowIndex === 7 && colIndex === 6) {
-              // Sposta il re
-              newCells[7][6] = 'k';
-              newCells[7][4] = '';
-              // Sposta la torre
-              newCells[7][5] = 'r';
-              newCells[7][7] = '';
               setBlackRRookHasMoved(true);
               socket?.emit("new_move", "o-o-o");
           }

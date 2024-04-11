@@ -141,39 +141,63 @@ export function isValidCastle(startRow: number, startCol: number, endRow: number
 
     // Verifica se la mossa è una mossa di arrocco
     if (piece === 'K' && !kingMoved) { // Arrocco bianco
-        if (endCol === 2 && !RRookMoved) { // Arrocco corto
-            if (cells[0][1] === '' && cells[0][2] === '' && cells[0][3] === '' && cells[0][0] === 'R') {
+        if (endCol === 6 && !RRookMoved) { // Arrocco corto
+            if (cells[7][5] === '' && cells[7][6] === '' && cells[7][7] === 'R') {
+                console.log("celle libere");
                 // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
-                if (!isUnderAttack(0, 4, 'white', cells) && !isUnderAttack(0, 3, 'white', cells) && !isUnderAttack(0, 2, 'white', cells)) {
+                if (!isUnderAttack(7, 4, 'white', cells) && !isUnderAttack(7, 5, 'white', cells) && !isUnderAttack(7, 6, 'white', cells)) {
+                    // Sposta il re
+                    cells[7][6] = 'K';
+                    cells[7][4] = '';
+                    // Sposta la torre
+                    cells[7][5] = 'R';
+                    cells[7][7] = '';
                     return true;
                 }
             }
-        } else if (endCol === 6 && !LRookMoved) { // Arrocco lungo
-            if (cells[0][5] === '' && cells[0][6] === '' && cells[0][7] === 'R') {
+        } else if (endCol === 2 && !LRookMoved) { // Arrocco lungo
+            if (cells[7][1] === '' && cells[7][2] === '' && cells[7][3] === '' && cells[7][0] === 'R') {
                 // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
-                if (!isUnderAttack(0, 4, 'white', cells) && !isUnderAttack(0, 5, 'white', cells) && !isUnderAttack(0, 6, 'white', cells)) {
+                if (!isUnderAttack(7, 2, 'white', cells) && !isUnderAttack(7, 3, 'white', cells) && !isUnderAttack(7, 4, 'white', cells)) {
+                    // Sposta il re
+                    cells[0][6] = 'K';
+                    cells[0][4] = '';
+                    // Sposta la torre
+                    cells[0][5] = 'R';
+                    cells[0][7] = '';
                     return true;
                 }
             }
         }
     } else if (piece === 'k' && !kingMoved) { // Arrocco nero
-        if (endCol === 2 && !LRookMoved) { // Arrocco corto
-            if (cells[7][1] === '' && cells[7][2] === '' && cells[7][3] === '' && cells[7][0] === 'r') {
+        if (endCol === 6 && !LRookMoved) { // Arrocco corto
+            if (cells[0][6] === '' && cells[0][5] === '' && cells[0][7] === 'r') {
                 // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
-                if (!isUnderAttack(7, 4, 'black', cells) && !isUnderAttack(7, 3, 'black', cells) && !isUnderAttack(7, 2, 'black', cells)) {
+                if (!isUnderAttack(0, 6, 'black', cells) && !isUnderAttack(0, 5, 'black', cells) && !isUnderAttack(0, 4, 'black', cells)) {
+                    // Sposta il re
+                    cells[0][6] = 'k';
+                    cells[0][4] = '';
+                    // Sposta la torre
+                    cells[0][5] = 'r';
+                    cells[0][7] = '';
                     return true;
                 }
             }
-        } else if (endCol === 6 && !RRookMoved) { // Arrocco lungo
-            if (cells[7][5] === '' && cells[7][6] === '' && cells[7][7] === 'r') {
+        } else if (endCol === 2 && !RRookMoved) { // Arrocco lungo
+            if (cells[0][1] === '' && cells[0][2] === ''  && cells[0][3] === '' && cells[0][0] === 'r') {
                 // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
-                if (!isUnderAttack(7, 4, 'black', cells) && !isUnderAttack(7, 5, 'black', cells) && !isUnderAttack(7, 6, 'black', cells)) {
+                if (!isUnderAttack(0, 2, 'black', cells) && !isUnderAttack(0, 3, 'black', cells) && !isUnderAttack(0, 4, 'black', cells)) {
+                    // Sposta il re
+                    cells[0][2] = 'k';
+                    cells[0][4] = '';
+                    // Sposta la torre
+                    cells[0][3] = 'r';
+                    cells[0][0] = '';
                     return true;
                 }
             }
         }
     }
-
     return false; // La mossa non è un arrocco valido
 }
 
