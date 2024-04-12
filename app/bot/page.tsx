@@ -36,21 +36,8 @@ export default function Home() {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
-      // Quando il socket si connette, controlla se c'è una lobby disponibile
-      newSocket.emit("check_lobby");
-    });
-
-    newSocket.on("lobby_available", (lobbyName: string) => {
-      // Se una lobby è disponibile, unisciti automaticamente ad essa
-      setLobby(lobbyName);
-      newSocket.emit("join_lobby", lobbyName);
-      
-    });
-
-    newSocket.on("no_lobby_available", () => {
-      // Se nessuna lobby è disponibile, crea una nuova lobby
+      // Quando il socket si connette, crea una lobby
       newSocket.emit("create_lobby");
-      
     });
 
     return () => {
@@ -65,7 +52,6 @@ export default function Home() {
       });
       socket.on("update_board", (newCells) => {
         setCells(newCells);
-        
       });
 
       socket.on("isCheckMate", () => {
