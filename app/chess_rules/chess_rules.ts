@@ -213,7 +213,7 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
             // Se la cella contiene un pezzo del colore opposto
             const piece = cells[i][j];
             if(piece==='' || (i===row && j === col)){continue;}
-            if ((piece.toUpperCase() === piece && defendingColor === "white") || (piece.toLowerCase() === piece && defendingColor === "black")) {
+            if ((piece.toLowerCase() === piece && defendingColor === "white") || (piece.toUpperCase() === piece && defendingColor === "black")) {
                 // Verifica se il pezzo può muoversi sulla posizione specificata
                 if (isValidMove(i, j, row, col, cells)) {
                     return true; // La posizione è sotto attacco
@@ -221,7 +221,6 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
             }
         }
     }
-
     // Nessuna mossa avversaria può raggiungere la posizione specificata
     return false; // La posizione non è sotto attacco
 }
@@ -229,9 +228,12 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
 
 
 export function isCheckMate(kingRow: number, kingCol: number, kingColor: string, cells: string[][]) {
-    if (!isUnderAttack(kingRow, kingCol, kingColor, cells)) {
+    const attackingColor = kingColor === "white" ? "black" : "white";
+    if (!isUnderAttack(kingRow, kingCol, attackingColor, cells)) {
+        console.log("king not under attack");
         return false; // Il re non è sotto scacco, quindi non c'è scacco matto
     } else {
+        console.log("king under attack");
         // Itera attraverso tutte le possibili mosse del re e verifica se in almeno una di esse il re non è più sotto scacco
         for (let rowOffset = -1; rowOffset <= 1; rowOffset++) {
             for (let colOffset = -1; colOffset <= 1; colOffset++) {
@@ -247,19 +249,22 @@ export function isCheckMate(kingRow: number, kingCol: number, kingColor: string,
                     const cell2 = cells;
                     cell2[newRow][newCol] = kingColor === "white" ? "K" : "k";
                     cell2[kingRow][kingCol] = '';
-                    if(!isUnderAttack(newRow, newCol, kingColor, cell2)){
+                    if(!isUnderAttack(newRow, newCol, attackingColor, cell2)){
                         // Se una mossa è possibile e il re non è più sotto scacco, non c'è scacco matto
+                        console.log("king can move away");
                         return false;
                     }
                     
                 }
             }
         }
-        const attackingColor = kingColor === "black" ? "white" : "black";
-        if (caninterfer(kingRow, kingCol, attackingColor, cells)) {
+
+        if (caninterfer(kingRow, kingCol, kingColor, cells)) {
+            console.log("piece can defend the king");
             return false;
         }
         // Se non ci sono mosse valide in cui il re non è sotto scacco, allora c'è scacco matto
+        console.log("checkmate");
         return true;
     }
 }
@@ -276,28 +281,35 @@ export function findpiece(piecename: string, pieceColor: string, cells: string[]
     return { row: 0, col: 0 }; // Se il pezzo non è stato trovato
 }
 
-export function caninterfer(kingRow: number, kingCol: number, attackingColor: string, cells: string[][]): boolean {
-    // Trova il colore opposto
-    const defendingColor = attackingColor === "white" ? "black" : "white";
-
-    // Per ogni cella sulla scacchiera
+export function caninterfer(kingRow: number, kingCol: number, kingColor: string, cells: string[][]): boolean {
+    const attackingColor = kingColor === "white" ? "black" : "white";
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
-            // Se la cella contiene un pezzo del colore del re
             const piece = cells[row][col];
-            if ((piece.toUpperCase() === piece && defendingColor === "white") || (piece.toLowerCase() === piece && defendingColor === "black")) {
-                // Per ogni cella sulla scacchiera
-                for (let targetRow = 0; targetRow < 8; targetRow++) {
-                    for (let targetCol = 0; targetCol < 8; targetCol++) {
-                        // Verifica se il pezzo può muoversi sulla cella target
-                        if (isValidMove(row, col, targetRow, targetCol, cells)) {
-                            // Copia la configurazione attuale della scacchiera
-                            const newCells = cells.map(row => [...row]);
-                            // Esegue la mossa
-                            newCells[targetRow][targetCol] = piece;
-                            newCells[row][col] = '';
-                            // Se il re non è più sotto scacco, restituisci true
-                            if (!isUnderAttack(kingRow, kingCol, attackingColor, newCells)) {
+            if (kingColor === 'white' && piece === piece.toUpperCase()) {
+                for (let row1 = 0; row1 < 8; row1++) {
+                    for (let col1 = 0; col1 < 8; col1++) {
+                        if(isValidMove(row, col, row1, col1, cells)){
+                            const trycell = cells;
+                            trycell[row1][col1] = piece;
+                            trycell[row][col] = '';
+                            if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
+                                console.log("white piece can interfer");
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            else if(kingColor === 'black' && piece === piece.toLowerCase()) {
+                for (let row1 = 0; row1 < 8; row1++) {
+                    for (let col1 = 0; col1 < 8; col1++) {
+                        if(isValidMove(row, col, row1, col1, cells)){
+                            const trycell = cells;
+                            trycell[row1][col1] = piece;
+                            trycell[row][col] = '';
+                            if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
+                                console.log("black piece can interfer");
                                 return true;
                             }
                         }
@@ -305,8 +317,9 @@ export function caninterfer(kingRow: number, kingCol: number, attackingColor: st
                 }
             }
         }
-    }
-    // Nessun pezzo può interrompere lo scacco
+    } 
+    console.log("cannot interfer")
     return false;
+
 }
 

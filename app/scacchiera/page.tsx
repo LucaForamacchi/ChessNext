@@ -215,9 +215,6 @@ export default function Home() {
           setBlackKingHasMoved(true); // Imposta il re nero come mosso
       }
       }
-      else {
-          setSelectedCell({ rowIndex, colIndex });
-      }
 };
   
   const formatTime = (seconds: number): string => {
