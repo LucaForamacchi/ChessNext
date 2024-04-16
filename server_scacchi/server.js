@@ -26,6 +26,7 @@ io.on("connection", (socket) => {
         ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
         ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
       ],
+      full: false,
       // Inizializza il turno corrente quando la lobby viene creata
       currentTurn: socket.id,
     };
@@ -42,8 +43,9 @@ io.on("connection", (socket) => {
   } else {
     // Altrimenti, il primo client si unisce automaticamente alla prima lobby disponibile
     let joinedLobby = false;
-    for (const lobby in lobbies) {
-      if (lobbies[lobby].players.length === 1) {
+    for (lobby in lobbies) {
+      if (lobbies[lobby].players.length === 1 && !lobbies[lobby].players.full) {
+        lobbies[lobby].players.full = true;
         lobbies[lobby].players.push(socket.id);
         // Inizializza il turno corrente quando il secondo giocatore si unisce alla lobby
         lobbies[lobby].currentTurn = lobbies[lobby].players[0];
@@ -56,7 +58,6 @@ io.on("connection", (socket) => {
         break;
       }
     }
-
     // Se non è stato possibile unirsi ad alcuna lobby esistente, crea una nuova lobby
     if (!joinedLobby) {
       createNewLobby();
@@ -67,22 +68,28 @@ io.on("connection", (socket) => {
     io.to(socket.lobby).emit("message", message);
   });
 
-  socket.on("update_board", (newBoard) => {
+  socket.on("update_board", (newBoard, move) => {
     lobbies[socket.lobby].board = newBoard;
+    console.log("update board server");
+    console.log("socket lobby",lobbies[socket.lobby].players)
     // Passa il turno al giocatore successivo dopo ogni mossa
     lobbies[socket.lobby].currentTurn = lobbies[socket.lobby].players.find(player => player !== socket.id);
-    io.to(socket.lobby).emit("update_board", newBoard);
-  });
-  
-  socket.on("turn", () =>{
-    io.to(socket.lobby).emit("current_turn", lobbies[socket.lobby].currentTurn);
+    //continua a mandarlo più volte del dovuto
+    io.to(socket.lobby).emit("update_board", newBoard, lobbies[socket.lobby].currentTurn, move);
+    io.to(socket.lobby).emit("isCheckMate");
   });
 
   socket.on("checkmate", () =>{
     io.to(socket.lobby).emit("isCheckMate");
   });
+
+  socket.on("end-game", (win_color) =>{
+    io.to(socket.lobby).emit("result", win_color);
+  });
+
   socket.on("new_move", (move) =>{
     io.to(socket.lobby).emit("new_move", move);
+    //io.to(socket.lobby.players).emit("new_move", move);
   });
   socket.on("disconnect", () => {
     console.log("User disconnected.");

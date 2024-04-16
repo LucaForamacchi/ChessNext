@@ -28,9 +28,21 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     if (piece === 'P'){//pedone bianco
         if (startCol === endCol && endRow < startRow) { // Muovimento in avanti
             if ((deltay === 1 && destinationPiece === '') || (startRow === 6 && deltaY === 2 && destinationPiece === '' && cells[endRow + 1][endCol] === '')) {
+                console.log(endRow);
+                if (endRow === 0) {
+                    cells[0][startCol] = 'Q';
+                    console.log(cells);
+                }
+                
                 return true;
             }
-        } else if ((deltaX === 1 || deltaX === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
+        } else if ((startRow - endRow === 1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
+            console.log(endRow);
+            if (endRow === 0) {
+                cells[0][endCol] = "Q";
+                console.log(cells[0][endCol]);
+                console.log(cells);
+            }
             return true; // mangiare
         }
         
@@ -39,7 +51,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
             if ((deltay === 1 && destinationPiece === '') || (startRow === 1 && deltaY === 2 && destinationPiece === '' && cells[endRow - 1][endCol] === '')) {
                 return true;
             }
-        } else if ((deltaX === 1 || deltaX === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
+        } else if ((startRow - endRow === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
             return true; // mangiare
         }
     }
