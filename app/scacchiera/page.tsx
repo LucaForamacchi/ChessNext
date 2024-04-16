@@ -98,12 +98,14 @@ export default function Home() {
         const blackKingPosition = findpiece("k", 'black', cells);
       
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
+          console.log("check white");
           if (clientId===player1) {
             socket.emit("end-game", "black");
           } else {
             socket.emit("end-game", "white");
           }
         } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
+          console.log("check black");
           if (clientId!==player1) {
             socket.emit("end-game", "white");
           } else {
@@ -135,8 +137,6 @@ export default function Home() {
         }
       });
 
-      
-      
       //socket.emit("checkmate");
       let intervalId: NodeJS.Timeout;
       const decrementTimer = () => {
@@ -207,6 +207,16 @@ export default function Home() {
         newCells[rowIndex][colIndex] = temp;
         setCells(newCells);
         setSelectedCell(null);
+        for (let c = 0; c< 8; c++) {
+          
+          if(cells[0][c] === 'P') {
+            console.log(cells);
+            cells[0][c] = 'Q';
+          }
+          else if(cells[7][c] === 'p') {
+            cells[0][c] = 'q';
+          }
+        }
         socket?.emit("update_board", newCells, move);
         if (temp === 'K'){setWhiteKingHasMoved(true);}
         else if (temp === "k"){setBlackKingHasMoved(true);}
@@ -313,8 +323,8 @@ export default function Home() {
           ))}
           {/* Sovrapposizione del messaggio di vittoria */}
           {resultMessage && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className={`bg-white p-4 rounded shadow ${resultMessage === 'Win' ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="absolute inset-0 flex items-center justify-center" style={rotationStyle}>
+              <div className={`bg-white p-4 rounded shadow ${resultMessage === 'win' ? 'text-green-600' : 'text-red-600'}`}>
                 <h2>{'You ' + resultMessage}</h2>
               </div>
             </div>

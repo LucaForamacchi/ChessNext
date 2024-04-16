@@ -28,21 +28,21 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     if (piece === 'P'){//pedone bianco
         if (startCol === endCol && endRow < startRow) { // Muovimento in avanti
             if ((deltay === 1 && destinationPiece === '') || (startRow === 6 && deltaY === 2 && destinationPiece === '' && cells[endRow + 1][endCol] === '')) {
-                console.log(endRow);
-                if (endRow === 0) {
-                    cells[0][startCol] = 'Q';
-                    console.log(cells);
-                }
+                //console.log(endRow);
+                //if (endRow === 0) {
+                //    cells[0][startCol] = 'Q';
+                //    console.log(cells);
+                //}
                 
                 return true;
             }
         } else if ((startRow - endRow === 1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
-            console.log(endRow);
-            if (endRow === 0) {
-                cells[0][endCol] = "Q";
-                console.log(cells[0][endCol]);
-                console.log(cells);
-            }
+            //console.log(endRow);
+            //if (endRow === 0) {
+            //    cells[0][endCol] = "Q";
+            //    console.log(cells[0][endCol]);
+            //    console.log(cells);
+            //}
             return true; // mangiare
         }
         
@@ -294,15 +294,15 @@ export function findpiece(piecename: string, pieceColor: string, cells: string[]
 }
 
 export function caninterfer(kingRow: number, kingCol: number, kingColor: string, cells: string[][]): boolean {
-    const attackingColor = kingColor === "white" ? "black" : "white";
+    let attackingColor = kingColor === "white" ? "black" : "white";
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
-            const piece = cells[row][col];
+            let piece = cells[row][col];
             if (kingColor === 'white' && piece === piece.toUpperCase()) {
                 for (let row1 = 0; row1 < 8; row1++) {
                     for (let col1 = 0; col1 < 8; col1++) {
                         if(isValidMove(row, col, row1, col1, cells)){
-                            const trycell = cells;
+                            let trycell = cells;
                             trycell[row1][col1] = piece;
                             trycell[row][col] = '';
                             if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
@@ -317,7 +317,7 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
                 for (let row1 = 0; row1 < 8; row1++) {
                     for (let col1 = 0; col1 < 8; col1++) {
                         if(isValidMove(row, col, row1, col1, cells)){
-                            const trycell = cells;
+                            let trycell = cells;
                             trycell[row1][col1] = piece;
                             trycell[row][col] = '';
                             if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
