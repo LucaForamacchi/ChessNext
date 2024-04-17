@@ -18,6 +18,8 @@ export default function Home() {
   ]);
   
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
+  
+
   const [moves, setMoves] = useState<string[]>([]);
   const [hover1vs1, setHover] = useState(false);
   const [timer, setTimer] = useState<number>(600);
@@ -78,14 +80,15 @@ export default function Home() {
       //});
 
       socket.on("update_board", (newCells, currentTurn, new_move) => {
-        console.log("update board client");
-        setCells(newCells);
+        //console.log("update board client");
+        setCells(cells => [...newCells]);
         // Verifica se il turno corrente appartiene al socket corrente
         const isMyTurn = currentTurn === socket.id;
         // Imposta il turno corrente
         setTurn(isMyTurn);
         //se tolgo la riga sotto si passano solo una volta i messaggi
-        setMoves([moves, new_move]);
+        //setMoves([moves, new_move]);
+        setMoves(moves => [...moves, new_move]);
         //socket.emit("checkmate");
         //socket.emit("turn");
       });
@@ -169,13 +172,11 @@ export default function Home() {
       return () => clearInterval(intervalId);
     
     }
-  }, [socket, moves]);
+  }, [socket]);
   
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
-    //if (!lobby || end) {
-    //    return;
-    //}
+    console.log("atomico",cells);
     if (end) {
         return;
     }
@@ -190,11 +191,15 @@ export default function Home() {
       //else {
       //  setSelectedCell(null);
       //}
+      console.log("client celle -1", cells);
     } else if (selectedCell) {
-      const newCells = [...cells];
-      const temp = newCells[selectedCell.rowIndex][selectedCell.colIndex]
+      console.log("client celle 0", cells);
+      let newCells = cells.slice();
+      let temp = newCells[selectedCell.rowIndex][selectedCell.colIndex]
+      console.log("client celle", cells);
         // Controlla se la mossa è valida rispettando le regole degli scacchi
       if (isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells)) {
+        console.log("aaaaaaaaaaaaaaaa");
         move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
         if (newCells[rowIndex][colIndex] !== '') {
             //socket?.emit("new_move", move + "+");
@@ -211,7 +216,7 @@ export default function Home() {
         for (let c = 0; c< 8; c++) {
           
           if(cells[0][c] === 'P') {
-            console.log(cells);
+            //console.log(cells);
             cells[0][c] = 'Q';
           }
           else if(cells[7][c] === 'p') {
@@ -245,6 +250,7 @@ export default function Home() {
       setSelectedCell(null);
       socket?.emit("update_board", newCells, move);
     }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
+        console.log("Arrocco nero");
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
           setBlackLRookHasMoved(true);
@@ -263,9 +269,10 @@ export default function Home() {
           setBlackKingHasMoved(true); // Imposta il re nero come mosso
       }
       else {
+        //console.log("null");
         setSelectedCell(null);
-      }
-      }
+      }}
+      
 };
   
   const formatTime = (seconds: number): string => {
@@ -312,7 +319,7 @@ export default function Home() {
                 key={`${rowIndex}-${colIndex}`}
                 className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
                 style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${rowIndex + 1}`) ? 'yellow' : undefined }}
-                onClick={() => { handleCellClick(rowIndex, colIndex); }}
+                onClick={() => { console.log("sium", cells);handleCellClick(rowIndex, colIndex); }}
               >
                 {cell !== '' ? (
                     <div style={{ transform: clientId !== player1 ? 'rotate(180deg)' : 'none' }}>

@@ -1,11 +1,15 @@
 // Funzione per verificare se una mossa è valida
 //lettere maiuscole bianco, minuscole nero
 export function isValidMove(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][]) {
+    //console.log("straprima", cells);
     const piece = cells[startRow][startCol];
     const destinationPiece = cells[endRow][endCol]; // Pezzo nella posizione di destinazione
     const deltax = Math.abs(startCol - endCol);
     const deltay = Math.abs(startRow - endRow);
     const deltaY = Math.abs(endRow - startRow);
+
+    const whiteKingPosition = findpiece("K", 'white', cells);
+    const blackKingPosition = findpiece("k", 'black', cells);
     
     // Verifica se la destinazione è la stessa posizione di partenza per evitare che il pezzo vada su se stesso
     if (startRow === endRow && startCol === endCol) {
@@ -25,15 +29,24 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     
 
     if (piece === 'P'){//pedone bianco
-        if (startCol === endCol && endRow < startRow) { // Muovimento in avanti
+        if (startCol === endCol && endRow < startRow) { // Movimento in avanti
             if ((deltay === 1 && destinationPiece === '') || (startRow === 6 && deltaY === 2 && destinationPiece === '' && cells[endRow + 1][endCol] === '')) {
                 //console.log(endRow);
                 //if (endRow === 0) {
                 //    cells[0][startCol] = 'Q';
                 //    console.log(cells);
                 //}
-                
-                return againunderattack(startRow,startCol,endRow,endCol,cells);
+                //console.log("prima",cells);
+                //console.log("dentro al pedone111111")
+                const cell3 = cells.slice();
+                cell3[endRow][endCol]= piece;
+                cell3[startRow][startCol]= '';
+                console.log(cells);
+                if (isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cell3)) {
+                    console.log("falso");
+                    return false;
+                }
+                return true;
             }
         } else if ((startRow - endRow === 1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
             //console.log(endRow);
@@ -42,23 +55,62 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
             //    console.log(cells[0][endCol]);
             //    console.log(cells);
             //}
-            return againunderattack(startRow,startCol,endRow,endCol,cells); // mangiare
+            if (isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cells)) {
+                let cell3 = cells.slice();
+                cell3[endRow][endCol]= piece;
+                cell3[startRow][startCol]= '';
+                if (!isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cell3)) {
+                    return true;
+                } else{return false;}
+            }
+            return true; // mangiare
         }
         
     } else if (piece === 'p'){//pedone nero
         if (startCol === endCol && endRow > startRow) { // Muovimento in avanti
             if ((deltay === 1 && destinationPiece === '') || (startRow === 1 && deltaY === 2 && destinationPiece === '' && cells[endRow - 1][endCol] === '')) {
-                return againunderattack(startRow,startCol,endRow,endCol,cells);
+                if (isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cell3)) {
+                        return true;
+                    } else{return false;}
+                }
+                return true;
             }
         } else if ((startRow - endRow === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
-            return againunderattack(startRow,startCol,endRow,endCol,cells); // mangiare
+            if (isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
+                let cell3 = cells.slice();
+                cell3[endRow][endCol]= piece;
+                cell3[startRow][startCol]= '';
+                if (!isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cell3)) {
+                    return true;
+                } else{return false;}
+            }
+            return true; // mangiare
         }
     }
     
     switch (piece.toLocaleUpperCase()) {
         case 'N': // Cavallo
             if ((Math.abs(deltay) === 1 && Math.abs(deltax) === 2) || (Math.abs(deltay) === 2 && Math.abs(deltax) === 1)) {
-                return againunderattack(startRow,startCol,endRow,endCol,cells); // Mosse valide a "L" del cavallo
+                if (piece === piece.toLocaleLowerCase() && isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cell3)) {
+                        return true;
+                    } else{return false;}
+                } else if (piece === piece.toLocaleUpperCase() && isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cell3)) {
+                        return true;
+                    } else{return false;}
+                }
+                return true;  // Mosse valide a "L" del cavallo
             } else{return false;}
 
         
@@ -73,7 +125,22 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                         return false; // La mossa non è valida
                     }
                 }
-                return againunderattack(startRow,startCol,endRow,endCol,cells); // Se non ci sono pezzi lungo la diagonale, la mossa è valida
+                if (piece === piece.toLocaleLowerCase() && isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cell3)) {
+                        return true;
+                    } else{return false;}
+                } else if (piece === piece.toLocaleUpperCase() && isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cell3)) {
+                        return true;
+                    } else{return false;}
+                }
+                return true;  // Se non ci sono pezzi lungo la diagonale, la mossa è valida
             } else {
                 return false; // Se non si muove lungo una diagonale, la mossa non è valida
             }
@@ -96,7 +163,22 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                         }
                     }
                 }
-                return againunderattack(startRow,startCol,endRow,endCol,cells); // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
+                if (piece === piece.toLocaleLowerCase() && isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cell3)) {
+                        return true;
+                    } else{return false;}
+                } else if (piece === piece.toLocaleUpperCase() && isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cell3)) {
+                        return true;
+                    } else{return false;}
+                }
+                return true;  // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
             } else {
                 return false; // Se non si muove lungo una riga o una colonna, la mossa non è valida
             }
@@ -128,7 +210,22 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                         }
                     }
                 }
-                return againunderattack(startRow,startCol,endRow,endCol,cells); // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
+                if (piece === piece.toLocaleLowerCase() && isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cell3)) {
+                        return true;
+                    } else{return false;}
+                } else if (piece === piece.toLocaleUpperCase() && isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cell3)) {
+                        return true;
+                    } else{return false;}
+                }
+                return true;  // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
             } else {
                 return false; // Se non si muove lungo una riga, una colonna o una diagonale, la mossa non è valida
             }
@@ -136,7 +233,22 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
         
         case 'K': // Re 
             if ((deltax <= 1 && deltay <= 1 && deltax >= -1 && deltay >= -1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
-                return againunderattack(startRow,startCol,endRow,endCol,cells); // La mossa è valida
+                if (piece === piece.toLocaleLowerCase() && isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cell3)) {
+                        return true;
+                    } else{return false;}
+                } else if (piece === piece.toLocaleUpperCase() && isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cells)) {
+                    let cell3 = cells.slice();
+                    cell3[endRow][endCol]= piece;
+                    cell3[startRow][startCol]= '';
+                    if (!isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, "black", cell3)) {
+                        return true;
+                    } else{return false;}
+                }
+                return true;  // La mossa è valida
             } else {
                 return false; // La mossa non è valida
             }         
@@ -241,10 +353,10 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
 export function isCheckMate(kingRow: number, kingCol: number, kingColor: string, cells: string[][]) {
     const attackingColor = kingColor === "white" ? "black" : "white";
     if (!isUnderAttack(kingRow, kingCol, attackingColor, cells)) {
-        console.log("king not under attack");
+        //console.log("king not under attack");
         return false; // Il re non è sotto scacco, quindi non c'è scacco matto
     } else {
-        console.log("king under attack");
+        //console.log("king under attack");
         // Itera attraverso tutte le possibili mosse del re e verifica se in almeno una di esse il re non è più sotto scacco
         for (let rowOffset = -1; rowOffset <= 1; rowOffset++) {
             for (let colOffset = -1; colOffset <= 1; colOffset++) {
@@ -257,7 +369,7 @@ export function isCheckMate(kingRow: number, kingCol: number, kingColor: string,
                 if (newRow > 7 || newRow < 0 || newCol > 7 || newCol < 0){continue;}
                 // Verifica se la mossa è valida e se dopo la mossa il re non è più sotto scacco
                 if (isValidMove(kingRow, kingCol, newRow, newCol, cells)) {
-                    const cell2 = cells;
+                    const cell2 = cells.slice();
                     cell2[newRow][newCol] = kingColor === "white" ? "K" : "k";
                     cell2[kingRow][kingCol] = '';
                     if(!isUnderAttack(newRow, newCol, attackingColor, cell2)){
@@ -301,7 +413,7 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
                 for (let row1 = 0; row1 < 8; row1++) {
                     for (let col1 = 0; col1 < 8; col1++) {
                         if(isValidMove(row, col, row1, col1, cells)){
-                            let trycell = cells;
+                            let trycell = cells.slice();
                             trycell[row1][col1] = piece;
                             trycell[row][col] = '';
                             if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
@@ -316,7 +428,7 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
                 for (let row1 = 0; row1 < 8; row1++) {
                     for (let col1 = 0; col1 < 8; col1++) {
                         if(isValidMove(row, col, row1, col1, cells)){
-                            let trycell = cells;
+                            let trycell = cells.slice();
                             trycell[row1][col1] = piece;
                             trycell[row][col] = '';
                             if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
@@ -334,31 +446,3 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
 
 }
 
-export function againunderattack(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][]) {
-    let piece = cells[startRow][startCol];
-    let wkingrow = 0;
-    let wkingcol = 0;
-    let bkingrow = 0;
-    let bkingcol = 0;
-    for(let i = 0; i<8; i++) {
-        for(let j = 0; j<8; j++) {
-            if (cells[i][j]==="K") {
-                wkingcol= j;
-                wkingrow= i;
-            } else if (cells[i][j]==="k") {
-                bkingcol= j;
-                bkingrow= i;
-            }
-        }
-    }
-    let cell3 = cells;
-    cell3[endRow][endCol] = piece;
-    cell3[startRow][startCol] = '';
-    console.log(cells);
-    if(piece === piece.toLocaleUpperCase() && isUnderAttack(wkingrow, wkingcol, "black", cell3)) {
-        return false;
-    } else if (piece === piece.toLocaleLowerCase() && isUnderAttack(bkingrow, bkingcol, "white", cell3)) {
-        return false;
-    }
-    return true;
-}
