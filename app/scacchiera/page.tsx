@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove, isValidCastle, isCheckMate, findpiece } from '../chess_rules/chess_rules';
+import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack } from '../chess_rules/chess_rules';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -137,6 +137,7 @@ export default function Home() {
         }
       });
 
+      
       //socket.emit("checkmate");
       let intervalId: NodeJS.Timeout;
       const decrementTimer = () => {

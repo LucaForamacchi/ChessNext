@@ -5,9 +5,8 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     const destinationPiece = cells[endRow][endCol]; // Pezzo nella posizione di destinazione
     const deltax = Math.abs(startCol - endCol);
     const deltay = Math.abs(startRow - endRow);
-    const deltaX = Math.abs(endCol - startCol);
     const deltaY = Math.abs(endRow - startRow);
-
+    
     // Verifica se la destinazione è la stessa posizione di partenza per evitare che il pezzo vada su se stesso
     if (startRow === endRow && startCol === endCol) {
         return false;
@@ -34,7 +33,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                 //    console.log(cells);
                 //}
                 
-                return true;
+                return againunderattack(startRow,startCol,endRow,endCol,cells);
             }
         } else if ((startRow - endRow === 1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
             //console.log(endRow);
@@ -43,23 +42,23 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
             //    console.log(cells[0][endCol]);
             //    console.log(cells);
             //}
-            return true; // mangiare
+            return againunderattack(startRow,startCol,endRow,endCol,cells); // mangiare
         }
         
     } else if (piece === 'p'){//pedone nero
         if (startCol === endCol && endRow > startRow) { // Muovimento in avanti
             if ((deltay === 1 && destinationPiece === '') || (startRow === 1 && deltaY === 2 && destinationPiece === '' && cells[endRow - 1][endCol] === '')) {
-                return true;
+                return againunderattack(startRow,startCol,endRow,endCol,cells);
             }
         } else if ((startRow - endRow === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
-            return true; // mangiare
+            return againunderattack(startRow,startCol,endRow,endCol,cells); // mangiare
         }
     }
     
     switch (piece.toLocaleUpperCase()) {
         case 'N': // Cavallo
             if ((Math.abs(deltay) === 1 && Math.abs(deltax) === 2) || (Math.abs(deltay) === 2 && Math.abs(deltax) === 1)) {
-                return true; // Mosse valide a "L" del cavallo
+                return againunderattack(startRow,startCol,endRow,endCol,cells); // Mosse valide a "L" del cavallo
             } else{return false;}
 
         
@@ -74,7 +73,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                         return false; // La mossa non è valida
                     }
                 }
-                return true; // Se non ci sono pezzi lungo la diagonale, la mossa è valida
+                return againunderattack(startRow,startCol,endRow,endCol,cells); // Se non ci sono pezzi lungo la diagonale, la mossa è valida
             } else {
                 return false; // Se non si muove lungo una diagonale, la mossa non è valida
             }
@@ -97,7 +96,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                         }
                     }
                 }
-                return true; // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
+                return againunderattack(startRow,startCol,endRow,endCol,cells); // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
             } else {
                 return false; // Se non si muove lungo una riga o una colonna, la mossa non è valida
             }
@@ -129,7 +128,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                         }
                     }
                 }
-                return true; // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
+                return againunderattack(startRow,startCol,endRow,endCol,cells); // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
             } else {
                 return false; // Se non si muove lungo una riga, una colonna o una diagonale, la mossa non è valida
             }
@@ -137,7 +136,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
         
         case 'K': // Re 
             if ((deltax <= 1 && deltay <= 1 && deltax >= -1 && deltay >= -1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
-                return true; // La mossa è valida
+                return againunderattack(startRow,startCol,endRow,endCol,cells); // La mossa è valida
             } else {
                 return false; // La mossa non è valida
             }         
@@ -335,3 +334,31 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
 
 }
 
+export function againunderattack(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][]) {
+    let piece = cells[startRow][startCol];
+    let wkingrow = 0;
+    let wkingcol = 0;
+    let bkingrow = 0;
+    let bkingcol = 0;
+    for(let i = 0; i<8; i++) {
+        for(let j = 0; j<8; j++) {
+            if (cells[i][j]==="K") {
+                wkingcol= j;
+                wkingrow= i;
+            } else if (cells[i][j]==="k") {
+                bkingcol= j;
+                bkingrow= i;
+            }
+        }
+    }
+    let cell3 = cells;
+    cell3[endRow][endCol] = piece;
+    cell3[startRow][startCol] = '';
+    console.log(cells);
+    if(piece === piece.toLocaleUpperCase() && isUnderAttack(wkingrow, wkingcol, "black", cell3)) {
+        return false;
+    } else if (piece === piece.toLocaleLowerCase() && isUnderAttack(bkingrow, bkingcol, "white", cell3)) {
+        return false;
+    }
+    return true;
+}
