@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove, isCheckMate, findpiece } from '../chess_rules/chess_rules';
+import { isValidMove, isValidCastle, isCheckMate, findpiece } from '../chess_rules/chess_rules';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -27,6 +27,17 @@ export default function Home() {
   const [i, setI] = useState<number>(0);
   const [resultMessage, setResultMessage] = useState<string>("");
   const [end, setEnd] = useState(false);
+  let move = '';
+  const [lastMove, setLastMove] = useState('');
+  const [lastcells, setlastCells] = useState<string[][]>([]);
+
+  
+  const [WhiteKingHasMoved, setWhiteKingHasMoved] = useState(false);
+  const [BlackKingHasMoved, setBlackKingHasMoved] = useState(false);
+  const [WhiteLRookHasMoved, setWhiteLRookHasMoved] = useState(false);
+  const [WhiteRRookHasMoved, setWhiteRRookHasMoved] = useState(false);
+  const [BlackLRookHasMoved, setBlackLRookHasMoved] = useState(false);
+  const [BlackRRookHasMoved, setBlackRRookHasMoved] = useState(false);
 
 
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -50,14 +61,28 @@ export default function Home() {
       socket.on("lobby_joined", (lobbyName) => {
         setLobby(lobbyName);
       });
-      socket.on("update_board", (newCells) => {
-        setCells(newCells);
+  
+      socket.on("update_board", (newCells, currentTurn, new_move) => {
+        console.log("aggiornamento");
+        if(newCells !== lastcells) {
+          setCells(newCells); // Aggiornamento delle celle
+          setlastCells(newCells);
+        }
+        
+  
+        // Verifica se è il turno corrente del giocatore
+        if (myturn && lastMove !== new_move) {
+          console.log("mossa", lastMove, "mossa dopo", new_move);
+          setMoves(moves => [...moves, new_move]);
+          setLastMove(new_move);
+        }
       });
-
+  
       socket.on("isCheckMate", () => {
         const whiteKingPosition = findpiece("K", 'white', cells);
         const blackKingPosition = findpiece("k", 'black', cells);
-      
+  
+        console.log("controllo scacchi", cells);
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
           if (colour === "white") {
             setResultMessage("Lose");
@@ -76,10 +101,6 @@ export default function Home() {
           }
         }
       });
-    
-      socket.on("new_move", (new_move) =>{
-        setMoves([...moves, new_move]);
-      });
   
       if (moves.length !== 0 && moves.length % 2 === 0) {
         const interval = setInterval(() => {
@@ -92,18 +113,12 @@ export default function Home() {
             }
           });
         }, 1000);
-    
+  
         return () => clearInterval(interval);
       }
-
-      if (!myturn && !end) {
-        makeComputerMove();
-        setTurn(true); // Dopo che il bot ha fatto la sua mossa, è di nuovo il turno del giocatore
-        }
-      socket.emit("checkmate");
-      
     }
-  }, [socket, moves]);
+  }, [socket]); // Aggiunta cells come dipendenza
+  
   
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
@@ -125,24 +140,76 @@ export default function Home() {
       const temp = newCells[selectedCell.rowIndex][selectedCell.colIndex]
         // Controlla se la mossa è valida rispettando le regole degli scacchi
       if (isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells)) {
-        const move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
+        move = `${letters[selectedCell.colIndex]}${numbers[selectedCell.rowIndex]} => ${letters[colIndex]}${numbers[rowIndex]}`
         if (newCells[rowIndex][colIndex] !== '') {
-            socket?.emit("new_move", move + "+");
-        } else {
-            socket?.emit("new_move", move);
-        }
+            move += "+";
+        } 
         // Svuota la casella di partenza
         newCells[selectedCell.rowIndex][selectedCell.colIndex] = '';
         // Sposta il pezzo nella nuova posizione
         newCells[rowIndex][colIndex] = temp;
         setCells(newCells);
         setSelectedCell(null);
-        socket?.emit("update_board", newCells);
-        setTurn(false);
-      } else {
-          setSelectedCell({ rowIndex, colIndex });
+        for (let c = 0; c< 8; c++) {
+          
+          if(cells[0][c] === 'P') {
+            cells[0][c] = 'Q';
+          }
+          else if(cells[7][c] === 'p') {
+            cells[0][c] = 'q';
+          }
+        }
+        socket?.emit("update_board", newCells, move);
+        makeComputerMove();
+        //setTurn(false);
+        if (temp === 'K'){setWhiteKingHasMoved(true);}
+        else if (temp === "k"){setBlackKingHasMoved(true);}
+        else if (temp === "R" && selectedCell.colIndex === 0){setWhiteLRookHasMoved(true);}
+        else if (temp === "R" && selectedCell.colIndex === 7){setWhiteRRookHasMoved(true);}
+        else if (temp === "r" && selectedCell.colIndex === 7){setBlackLRookHasMoved(true);}
+        else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
+      } 
+      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
+        // Arrocco bianco corto
+        if (rowIndex === 7 && colIndex === 6) {
+          setWhiteRRookHasMoved(true);
+          //socket?.emit("new_move", "O-O");
+          move = "O-O";
       }
+      // Arrocco bianco lungo
+      else if (rowIndex === 0 && colIndex === 2) {
+          setWhiteLRookHasMoved(true);
+          //socket?.emit("new_move", "O-O-O");
+          move = "O-O-O";
+      }
+      setWhiteKingHasMoved(true); // Imposta il re bianco come mosso
+      setCells(newCells);
+      setSelectedCell(null);
+      socket?.emit("update_board", newCells, move);
+      makeComputerMove();
+    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
       
+        // Arrocco nero corto
+        if (rowIndex === 7 && colIndex === 2) {
+          setBlackLRookHasMoved(true);
+          //socket?.emit("new_move", "o-o");
+          move = "o-o";
+          }
+          // Arrocco nero lungo
+          else if (rowIndex === 7 && colIndex === 6) {
+              setBlackRRookHasMoved(true);
+              //socket?.emit("new_move", "o-o-o");
+              move = "o-o-o";
+          }
+          setCells(newCells);
+          setSelectedCell(null);
+          socket?.emit("update_board", newCells, move);
+          setBlackKingHasMoved(true); // Imposta il re nero come mosso
+          makeComputerMove();
+      }
+      else {
+        setSelectedCell(null);
+      }
     }
 };
   
@@ -154,14 +221,16 @@ export default function Home() {
 
   const makeComputerMove = () => {
     const validMoves = [];
+    const newCells = [...cells];
     // Scansiona tutte le celle per trovare le mosse valide
     for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
       for (let colIndex = 0; colIndex < 8; colIndex++) {
-        if (cells[rowIndex][colIndex] !== '' && ((!myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toUpperCase() && colour === "black") || (!myturn && cells[rowIndex][colIndex] === cells[rowIndex][colIndex].toLowerCase() && colour === "white"))) {
+        if (newCells[rowIndex][colIndex] !== '' && ((myturn && newCells[rowIndex][colIndex] === newCells[rowIndex][colIndex].toUpperCase() && colour === "black") || (myturn && newCells[rowIndex][colIndex] === newCells[rowIndex][colIndex].toLowerCase() && colour === "white"))) {
           for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-              if (isValidMove(rowIndex, colIndex, i, j, cells)) {
+              if (isValidMove(rowIndex, colIndex, i, j, newCells)) {
                 validMoves.push({ from: { row: rowIndex, col: colIndex }, to: { row: i, col: j } });
+                
               } 
             }
           }
@@ -173,11 +242,10 @@ export default function Home() {
     if (validMoves.length > 0) {
       const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
       const { from, to } = randomMove;
-      const move = `${letters[from.col]}${from.row + 1} => ${letters[to.col]}${to.row + 1}`;
-      cells[to.row][to.col]=cells[from.row][from.col];
-      cells[from.row][from.col] = '';
-      socket?.emit("new_move", move);
-      socket?.emit("update_board", cells);
+      const move = `${letters[from.col]}${numbers[from.row]} => ${letters[to.col]}${numbers[to.row]}`;
+      newCells[to.row][to.col]=newCells[from.row][from.col];
+      newCells[from.row][from.col] = '';
+      socket?.emit("update_board", newCells, move);
     }
   };
   
@@ -198,22 +266,32 @@ export default function Home() {
         <div className="grid grid-cols-1">
           <div className="p-4 w-12 h-12"></div>
           {numbers.map((number, index) => (
-            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{number}</div>
+            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+              <div>
+               {number} 
+              </div>
+              }</div>
           ))}
         </div>
         <div className="grid grid-cols-8 relative"> {/* Aggiunto il relative positioning */}
           {letters.map((letter, index) => (
-            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{letter}</div>
+            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+              <div>{letter}</div>
+              }</div>
           ))}
           {cells.map((row, rowIndex) => (
             row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12`}
-                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${rowIndex + 1}`) ? 'yellow' : undefined }}
+                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
+                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${numbers[rowIndex]}`) ? 'yellow' : undefined }}
                 onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
-                {cell !== '' ? cell : ""}
+                {cell !== '' ? (
+                    <div>
+                      {cell}
+                    </div>
+                  ) : ""}
               </div>
             ))
           ))}
@@ -233,6 +311,7 @@ export default function Home() {
       {lobby && (
         <h2>You are in lobby: {lobby}</h2>
       )}
+
       <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px' }}>
         <h2 style={{ margin: '0' }}>Timer: {formatTime(timer)}</h2>
       </div>

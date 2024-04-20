@@ -14,6 +14,7 @@ export default function Page() {
   
   const [hover1vs1, setHover1vs1] = useState(false);
   const [hover1vsBot, setHover1vsBot] = useState(false);
+  const [hoverdatabase, setHoverdatabase] = useState(false);
 
   return (
     <div style={{ backgroundColor: '#c3e6cb', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -34,6 +35,15 @@ export default function Page() {
           onMouseLeave={() => setHover1vsBot(false)}
         >
           1 vs Bot
+        </button>
+      </Link>
+      <Link href="/database" passHref>
+        <button
+          style={{ margin: '10px', padding: '10px 20px', backgroundColor: hoverdatabase ? '#218838' : '#28a745', color: 'white', borderRadius: '5px', fontSize: '18px', border: 'none', cursor: 'pointer' }}
+          onMouseEnter={() => setHoverdatabase(true)}
+          onMouseLeave={() => setHoverdatabase(false)}
+        >
+          Database
         </button>
       </Link>
     </div>

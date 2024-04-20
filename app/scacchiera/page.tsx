@@ -99,7 +99,7 @@ export default function Home() {
       socket.on("isCheckMate", () => {
         const whiteKingPosition = findpiece("K", 'white', cells);
         const blackKingPosition = findpiece("k", 'black', cells);
-      
+        console.log("sto controllando i matti");
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
           console.log("check white");
           if (clientId===player1) {
@@ -176,8 +176,8 @@ export default function Home() {
   
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
-    console.log("atomico",cells);
-    if (end) {
+    //console.log("atomico",cells);
+    if (!lobby || end) {
         return;
     }
     const piece = cells[rowIndex][colIndex];
@@ -191,14 +191,16 @@ export default function Home() {
       //else {
       //  setSelectedCell(null);
       //}
-      console.log("client celle -1", cells);
+      //console.log("client celle -1", cells);
     } else if (selectedCell) {
-      console.log("client celle 0", cells);
+      //console.log("client celle 0", cells);
       let newCells = cells.slice();
       let temp = newCells[selectedCell.rowIndex][selectedCell.colIndex]
-      console.log("client celle", cells);
+      //console.log("client celle", cells);
         // Controlla se la mossa è valida rispettando le regole degli scacchi
-      if (isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells)) {
+      let valid_move = isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells);
+      console.log(valid_move);
+      if (valid_move) {
         console.log("aaaaaaaaaaaaaaaa");
         move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
         if (newCells[rowIndex][colIndex] !== '') {
@@ -233,6 +235,7 @@ export default function Home() {
       }
       else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
         // Arrocco bianco corto
+        console.log("bbbbbbbbbbbbbbbbbbbbbbbbb");
         console.log("rowIndex, colIndex");
         if (rowIndex === 7 && colIndex === 6) {
           setWhiteRRookHasMoved(true);
@@ -250,7 +253,8 @@ export default function Home() {
       setSelectedCell(null);
       socket?.emit("update_board", newCells, move);
     }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
-        console.log("Arrocco nero");
+      console.log("cccccccccccccccccccccccccccc");
+      console.log("Arrocco nero");
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
           setBlackLRookHasMoved(true);
@@ -270,6 +274,7 @@ export default function Home() {
       }
       else {
         //console.log("null");
+        console.log("ddddddddddddddddddddddddd");
         setSelectedCell(null);
       }}
       
@@ -319,7 +324,7 @@ export default function Home() {
                 key={`${rowIndex}-${colIndex}`}
                 className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
                 style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${rowIndex + 1}`) ? 'yellow' : undefined }}
-                onClick={() => { console.log("sium", cells);handleCellClick(rowIndex, colIndex); }}
+                onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
                 {cell !== '' ? (
                     <div style={{ transform: clientId !== player1 ? 'rotate(180deg)' : 'none' }}>

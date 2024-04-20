@@ -70,11 +70,9 @@ io.on("connection", (socket) => {
 
   socket.on("update_board", (newBoard, move) => {
     lobbies[socket.lobby].board = newBoard;
-    console.log("update board server");
-    console.log("socket lobby",lobbies[socket.lobby].players)
     // Passa il turno al giocatore successivo dopo ogni mossa
     lobbies[socket.lobby].currentTurn = lobbies[socket.lobby].players.find(player => player !== socket.id);
-    //continua a mandarlo più volte del dovuto
+    
     io.to(socket.lobby).emit("update_board", newBoard, lobbies[socket.lobby].currentTurn, move);
     io.to(socket.lobby).emit("isCheckMate");
   });
