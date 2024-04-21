@@ -117,7 +117,7 @@ export default function Home() {
         return () => clearInterval(interval);
       }
     }
-  }, [socket]); // Aggiunta cells come dipendenza
+  }, [socket, cells]); // Aggiunta cells come dipendenza
   
   
 
@@ -222,6 +222,8 @@ export default function Home() {
   const makeComputerMove = () => {
     const validMoves = [];
     const newCells = [...cells];
+    const moveScores: Record<string, number> = {}; // oggetto per memorizzare i punteggi delle mosse
+    
     // Scansiona tutte le celle per trovare le mosse valide
     for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
       for (let colIndex = 0; colIndex < 8; colIndex++) {
@@ -229,8 +231,11 @@ export default function Home() {
           for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
               if (isValidMove(rowIndex, colIndex, i, j, newCells)) {
-                validMoves.push({ from: { row: rowIndex, col: colIndex }, to: { row: i, col: j } });
-                
+                // Calcola il punteggio per questa mossa
+                const score = calculateMoveScore(rowIndex, colIndex, i, j, newCells);
+                const moveKey = `${rowIndex},${colIndex},${i},${j}`;
+                moveScores[moveKey] = score;
+                validMoves.push({ from: { row: rowIndex, col: colIndex }, to: { row: i, col: j }, score });
               } 
             }
           }
@@ -238,16 +243,81 @@ export default function Home() {
       }
     }
   
-    // Se ci sono mosse valide, seleziona una a caso
+    // Se ci sono mosse valide, seleziona quella con il punteggio più alto
     if (validMoves.length > 0) {
-      const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-      const { from, to } = randomMove;
+      validMoves.sort((a, b) => b.score - a.score); // Ordina le mosse per punteggio decrescente
+      console.log("mosse",validMoves);
+      const { from, to } = validMoves[0]; // Seleziona la mossa con il punteggio più alto
       const move = `${letters[from.col]}${numbers[from.row]} => ${letters[to.col]}${numbers[to.row]}`;
-      newCells[to.row][to.col]=newCells[from.row][from.col];
+      newCells[to.row][to.col] = newCells[from.row][from.col];
       newCells[from.row][from.col] = '';
       socket?.emit("update_board", newCells, move);
     }
   };
+  
+  // Funzione per calcolare il punteggio di una mossa
+  const calculateMoveScore = (fromRow: number, fromCol: number, toRow: number, toCol: number, cells: any[]) => {
+    const pieceValues: Record<string, number>  = {
+      'p': 1, // Pedone
+      'r': 5, // Torre
+      'n': 3, // Cavallo
+      'b': 3, // Alfiere
+      'q': 9, // Regina
+      'k': 100 // Re (valore arbitrario, in quanto non è desiderabile sacrificare il re)
+    };
+  
+    // Matrice dei punteggi posizionali dei pedoni per il computer nero
+    const pawnPositionScores = [
+      [ 0,  0,  0,  0,  0,  0,  0,  0],
+      [ 1,  1,  1,  0,  0,  1,  1,  1],
+      [ 0,  0,  0,0.5,0.5,  0,  0,  0],
+      [ 0,  0,  0,  1,  1,  0,  0,  0],
+      [0.5,0.5, 1,1.5,1.5, 1, 0.5,0.5],
+      [ 1,  1,  2,  3,  3,  2,  1,  1],
+      [ 5,  5,  5,  5,  5,  5,  5,  5],
+      [ 9,  9,  9,  9,  9,  9,  9,  9]
+    ];
+  
+    // Simula la mossa sulla copia temporanea della scacchiera
+    const tempCells = cells.map(row => [...row]); // Copia profonda della scacchiera
+    const piece = tempCells[fromRow][fromCol];
+    tempCells[toRow][toCol] = piece;
+    tempCells[fromRow][fromCol] = '';
+  
+    let myScore = 0;
+    let opponentScore = 0;
+  
+    // Calcola il punteggio totale dei pezzi sulla scacchiera
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        const piece = tempCells[i][j];
+        if (piece !== '') {
+          // Se il pezzo è nero, aggiungi il suo valore al punteggio dell'avversario
+          if (piece === piece.toLowerCase()) {
+            myScore += pieceValues[piece.toLowerCase()]; // Utilizza lettere maiuscole per il pezzo avversario
+            // Se il pezzo è un pedone nero, aggiungi anche il punteggio posizionale
+            if (piece === 'p') {
+              myScore += pawnPositionScores[i][j];
+            }
+          } else { // Se il pezzo non è nero, aggiungi il suo valore al tuo punteggio
+            opponentScore += pieceValues[piece.toLowerCase()];
+            // Se il pezzo è un pedone bianco, aggiungi anche il punteggio posizionale
+            if (piece === 'P') {
+              opponentScore += pawnPositionScores[7-i][j]; // Inverto la riga
+            }
+          }
+        }
+      }
+    }
+  
+    // Restituisci la differenza tra il tuo punteggio e quello dell'avversario
+    return myScore - opponentScore;
+  };
+  
+  
+  
+  
+  
   
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: '#c3e6cb', position: 'relative' }}>
