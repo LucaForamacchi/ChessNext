@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove, isValidCastle, isCheckMate, findpiece } from '../chess_rules/chess_rules';
+import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent } from '../chess_rules/chess_rules';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -24,7 +24,6 @@ export default function Home() {
   const [lobby, setLobby] = useState("");
   const [colour, setColour] = useState("white");
   const [myturn, setTurn] = useState(true);
-  const [i, setI] = useState<number>(0);
   const [resultMessage, setResultMessage] = useState<string>("");
   const [end, setEnd] = useState(false);
   let move = '';
@@ -60,30 +59,28 @@ export default function Home() {
     if (socket) {
       socket.on("lobby_joined", (lobbyName) => {
         setLobby(lobbyName);
+        socket.emit("bot");
       });
   
       socket.on("update_board", (newCells, currentTurn, new_move) => {
-        console.log("aggiornamento");
+        const isMyTurn = currentTurn === socket.id;
+        // Imposta il turno corrente
         if(newCells !== lastcells) {
           setCells(newCells); // Aggiornamento delle celle
           setlastCells(newCells);
         }
         
-  
         // Verifica se è il turno corrente del giocatore
         if (myturn && lastMove !== new_move) {
-          console.log("mossa", lastMove, "mossa dopo", new_move);
           setMoves(moves => [...moves, new_move]);
           setLastMove(new_move);
+          
         }
-      });
+
+        const whiteKingPosition = findpiece("K", 'white', newCells);
+        const blackKingPosition = findpiece("k", 'black', newCells);
   
-      socket.on("isCheckMate", () => {
-        const whiteKingPosition = findpiece("K", 'white', cells);
-        const blackKingPosition = findpiece("k", 'black', cells);
-  
-        console.log("controllo scacchi", cells);
-        if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
+        if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", newCells)) {
           if (colour === "white") {
             setResultMessage("Lose");
             setEnd(true);
@@ -91,7 +88,7 @@ export default function Home() {
             setResultMessage("Win");
             setEnd(true);
           }
-        } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
+        } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", newCells)) {
           if (colour === "black") {
             setResultMessage("Lose");
             setEnd(true);
@@ -100,8 +97,9 @@ export default function Home() {
             setEnd(true);
           }
         }
+        
       });
-  
+      
       if (moves.length !== 0 && moves.length % 2 === 0) {
         const interval = setInterval(() => {
           setTimer(prevTimer => {
@@ -117,7 +115,8 @@ export default function Home() {
         return () => clearInterval(interval);
       }
     }
-  }, [socket, cells]); // Aggiunta cells come dipendenza
+  }, [socket]); // Aggiunta cells come dipendenza
+  
   
   
 
@@ -148,8 +147,7 @@ export default function Home() {
         newCells[selectedCell.rowIndex][selectedCell.colIndex] = '';
         // Sposta il pezzo nella nuova posizione
         newCells[rowIndex][colIndex] = temp;
-        setCells(newCells);
-        setSelectedCell(null);
+        
         for (let c = 0; c< 8; c++) {
           
           if(cells[0][c] === 'P') {
@@ -159,9 +157,23 @@ export default function Home() {
             cells[0][c] = 'q';
           }
         }
-        socket?.emit("update_board", newCells, move);
-        makeComputerMove();
-        //setTurn(false);
+        const whiteKingPosition = findpiece("K", 'white', cells);
+        if(isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', cells)) {
+          if(!isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', newCells)) {
+            socket?.emit("update_board", newCells, move);
+            setCells(newCells);
+            setSelectedCell(null);
+            makeComputerMove();
+          }
+          
+        } else {
+          
+          socket?.emit("update_board", newCells, move);
+          setCells(newCells);
+          setSelectedCell(null);
+          makeComputerMove();
+        }
+        
         if (temp === 'K'){setWhiteKingHasMoved(true);}
         else if (temp === "k"){setBlackKingHasMoved(true);}
         else if (temp === "R" && selectedCell.colIndex === 0){setWhiteLRookHasMoved(true);}
@@ -173,13 +185,11 @@ export default function Home() {
         // Arrocco bianco corto
         if (rowIndex === 7 && colIndex === 6) {
           setWhiteRRookHasMoved(true);
-          //socket?.emit("new_move", "O-O");
           move = "O-O";
       }
       // Arrocco bianco lungo
       else if (rowIndex === 0 && colIndex === 2) {
           setWhiteLRookHasMoved(true);
-          //socket?.emit("new_move", "O-O-O");
           move = "O-O-O";
       }
       setWhiteKingHasMoved(true); // Imposta il re bianco come mosso
@@ -192,13 +202,11 @@ export default function Home() {
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
           setBlackLRookHasMoved(true);
-          //socket?.emit("new_move", "o-o");
           move = "o-o";
           }
           // Arrocco nero lungo
           else if (rowIndex === 7 && colIndex === 6) {
               setBlackRRookHasMoved(true);
-              //socket?.emit("new_move", "o-o-o");
               move = "o-o-o";
           }
           setCells(newCells);
@@ -220,43 +228,21 @@ export default function Home() {
   };
 
   const makeComputerMove = () => {
-    const validMoves = [];
-    const newCells = [...cells];
-    const moveScores: Record<string, number> = {}; // oggetto per memorizzare i punteggi delle mosse
+    //le mosse vanno dispari per spostare i pezzi neri
+    findbestmove('black',cells, 2);
+    bestscore = 0;
     
-    // Scansiona tutte le celle per trovare le mosse valide
-    for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
-      for (let colIndex = 0; colIndex < 8; colIndex++) {
-        if (newCells[rowIndex][colIndex] !== '' && ((myturn && newCells[rowIndex][colIndex] === newCells[rowIndex][colIndex].toUpperCase() && colour === "black") || (myturn && newCells[rowIndex][colIndex] === newCells[rowIndex][colIndex].toLowerCase() && colour === "white"))) {
-          for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-              if (isValidMove(rowIndex, colIndex, i, j, newCells)) {
-                // Calcola il punteggio per questa mossa
-                const score = calculateMoveScore(rowIndex, colIndex, i, j, newCells);
-                const moveKey = `${rowIndex},${colIndex},${i},${j}`;
-                moveScores[moveKey] = score;
-                validMoves.push({ from: { row: rowIndex, col: colIndex }, to: { row: i, col: j }, score });
-              } 
-            }
-          }
-        }
-      }
-    }
-  
-    // Se ci sono mosse valide, seleziona quella con il punteggio più alto
-    if (validMoves.length > 0) {
-      validMoves.sort((a, b) => b.score - a.score); // Ordina le mosse per punteggio decrescente
-      console.log("mosse",validMoves);
-      const { from, to } = validMoves[0]; // Seleziona la mossa con il punteggio più alto
-      const move = `${letters[from.col]}${numbers[from.row]} => ${letters[to.col]}${numbers[to.row]}`;
-      newCells[to.row][to.col] = newCells[from.row][from.col];
-      newCells[from.row][from.col] = '';
-      socket?.emit("update_board", newCells, move);
-    }
+    let [row,col, row2, col2] = bestmove;
+    let piece = cells[row][col];
+    console.log("il pezzo", piece);
+    cells[row2][col2] = piece;
+    cells[row][col] = '';
+    const move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}`;
+    socket?.emit("update_board", cells, move)
   };
   
   // Funzione per calcolare il punteggio di una mossa
-  const calculateMoveScore = (fromRow: number, fromCol: number, toRow: number, toCol: number, cells: any[]) => {
+  const calculateScore = (cells: any[]) => {
     const pieceValues: Record<string, number>  = {
       'p': 1, // Pedone
       'r': 5, // Torre
@@ -277,12 +263,18 @@ export default function Home() {
       [ 5,  5,  5,  5,  5,  5,  5,  5],
       [ 9,  9,  9,  9,  9,  9,  9,  9]
     ];
-  
-    // Simula la mossa sulla copia temporanea della scacchiera
-    const tempCells = cells.map(row => [...row]); // Copia profonda della scacchiera
-    const piece = tempCells[fromRow][fromCol];
-    tempCells[toRow][toCol] = piece;
-    tempCells[fromRow][fromCol] = '';
+
+    const knightPositionScores = [
+      [-5, 0, -3, -3, -3, -3, 0, -5],
+      [-4, -2,  0,  0,  0,  0, -2, -4],
+      [-3,  0,  1,  1.5,  1.5,  1,  0, -3],
+      [-3,  0.5,  1.5, 2, 2,  1.5, 0.5, -3],
+      [-3,  0,  1.5, 2, 2,  1.5, 0, -3],
+      [-3,  0.5,  1,  1.5,  1.5,  1,  0.5, -3],
+      [-4, -2,  0,  0.5,  0.5,  0, -2, -4],
+      [-5, 0, -3, -3, -3, -3, 0, -5]
+    ];
+    
   
     let myScore = 0;
     let opponentScore = 0;
@@ -290,7 +282,7 @@ export default function Home() {
     // Calcola il punteggio totale dei pezzi sulla scacchiera
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
-        const piece = tempCells[i][j];
+        const piece = cells[i][j];
         if (piece !== '') {
           // Se il pezzo è nero, aggiungi il suo valore al punteggio dell'avversario
           if (piece === piece.toLowerCase()) {
@@ -299,11 +291,17 @@ export default function Home() {
             if (piece === 'p') {
               myScore += pawnPositionScores[i][j];
             }
+            else if (piece === 'n') {
+              myScore += knightPositionScores[i][j];
+            }
           } else { // Se il pezzo non è nero, aggiungi il suo valore al tuo punteggio
             opponentScore += pieceValues[piece.toLowerCase()];
             // Se il pezzo è un pedone bianco, aggiungi anche il punteggio posizionale
             if (piece === 'P') {
               opponentScore += pawnPositionScores[7-i][j]; // Inverto la riga
+            }
+            if (piece === 'N') {
+              opponentScore += knightPositionScores[i][j]; // Inverto la riga
             }
           }
         }
@@ -313,8 +311,90 @@ export default function Home() {
     // Restituisci la differenza tra il tuo punteggio e quello dell'avversario
     return myScore - opponentScore;
   };
-  
-  
+
+  let initialscore = 0;
+  let winitialscore = 0;
+  let bestscore = 0;
+  let initialmove: number[];
+  let winitialmove: number[];
+  let bestmove: number[];
+  let whitebestmove: number[];
+  let whitebestscore = 0;
+
+  const findbestmove = (color: string, cells: string[][], depth: number) => {
+    // Condizione di terminazione: raggiunto il livello massimo di profondità
+    if (depth === -1) {
+      return calculateScore(cells);
+    }
+
+    // Copia della scacchiera per effettuare le mosse senza modificare la posizione attuale
+    const tempCells = cells.map(row => [...row]);
+
+    // Scansione di ogni cella della scacchiera
+    for (let rowIndex = 0; rowIndex < 8; rowIndex++) {
+      for (let colIndex = 0; colIndex < 8; colIndex++) {
+        let piece = cells[rowIndex][colIndex];
+        if (piece === '') {
+          continue; // Se la cella è vuota, passa alla prossima
+        }
+
+        // Se il pezzo è nero e la ricerca è per i pezzi neri
+        if (piece === piece.toLowerCase() && color === 'black') {
+          // Scansione di tutte le mosse possibili per il pezzo
+          for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+              if (isValidMove(rowIndex, colIndex, i, j, tempCells)) {
+                // Effettua la mossa sulla scacchiera temporanea
+                const newCells = tempCells.map(row => [...row]);
+                const piece = newCells[rowIndex][colIndex];
+                newCells[i][j] = piece;
+                newCells[rowIndex][colIndex] = '';
+                // Calcola il punteggio per questa mossa
+                const score = calculateScore(newCells);
+                if (depth === 2) {
+                  initialscore = score;
+                  initialmove = [rowIndex, colIndex, i, j];
+                }
+                // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
+                if (findbestmove('white', newCells, depth - 1) >= initialscore && score >= bestscore) {
+                  //console.log(initialmove, score, bestscore, newCells);
+                  bestmove = initialmove;
+                  bestscore = score;
+                }
+              }
+            }
+          }
+        } else if (piece === piece.toUpperCase() && color === 'white') {
+          // Scansione di tutte le mosse possibili per il pezzo bianco
+          for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+              if (isValidMove(rowIndex, colIndex, i, j, tempCells)) {
+                // Effettua la mossa sulla scacchiera temporanea
+                const newCells = tempCells.map(row => [...row]);
+                const piece = newCells[rowIndex][colIndex];
+                newCells[i][j] = piece;
+                newCells[rowIndex][colIndex] = '';
+                // Calcola il punteggio per questa mossa
+                const score = calculateScore(newCells);
+                if (depth === 1) {
+                  winitialscore = score;
+                  winitialmove = [rowIndex, colIndex, i, j];
+                }
+                // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
+                if (findbestmove('black', newCells, depth - 1) <= winitialscore && score <= whitebestscore) {
+                  whitebestmove = initialmove;
+                  whitebestscore = score;
+                }
+              }
+            }
+          }
+      }
+    }
+  }
+    // Restituisci il miglior punteggio trovato
+    return bestscore;
+  }
+
   
   
   
@@ -359,7 +439,7 @@ export default function Home() {
               >
                 {cell !== '' ? (
                     <div>
-                      {cell}
+                      {renderCellContent(cell)}
                     </div>
                   ) : ""}
               </div>

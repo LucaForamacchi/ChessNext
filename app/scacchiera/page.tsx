@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack } from '../chess_rules/chess_rules';
+import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent } from '../chess_rules/chess_rules';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -73,47 +73,25 @@ export default function Home() {
         setplayer1(creatorid[0]);
       });
 
-      //socket.on("new_move", (new_move) => {
-      //  setMoves([...moves, new_move]);
-      //  console.log("nuova mossa")
-      //  //socket.emit("checkmate");
-      //});
-
       socket.on("update_board", (newCells, currentTurn, new_move) => {
-        //console.log("update board client");
         setCells(cells => [...newCells]);
         // Verifica se il turno corrente appartiene al socket corrente
         const isMyTurn = currentTurn === socket.id;
         // Imposta il turno corrente
         setTurn(isMyTurn);
         //se tolgo la riga sotto si passano solo una volta i messaggi
-        //setMoves([moves, new_move]);
         setMoves(moves => [...moves, new_move]);
-        //socket.emit("checkmate");
-        //socket.emit("turn");
       });
-      //socket.on("current_turn", (currentTurn) => {
-      //  
-      //});
       
       socket.on("isCheckMate", () => {
         const whiteKingPosition = findpiece("K", 'white', cells);
         const blackKingPosition = findpiece("k", 'black', cells);
-        console.log("sto controllando i matti");
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
-          console.log("check white");
-          if (clientId===player1) {
-            socket.emit("end-game", "black");
-          } else {
-            socket.emit("end-game", "white");
-          }
+          socket.emit("end-game", "black");
+
         } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
-          console.log("check black");
-          if (clientId!==player1) {
-            socket.emit("end-game", "white");
-          } else {
-            socket.emit("end-game", "black");
-          }
+          socket.emit("end-game", "white");
+
         }
       });
     
@@ -172,7 +150,7 @@ export default function Home() {
       return () => clearInterval(intervalId);
     
     }
-  }, [socket]);
+  }, [socket, cells]);
   
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
@@ -181,51 +159,66 @@ export default function Home() {
         return;
     }
     const piece = cells[rowIndex][colIndex];
-    console.log(piece);
     if (!selectedCell && piece !== '') {
       // Controlla se è il turno del giocatore corrente
       if ((myturn && piece === piece.toUpperCase() && clientId===player1) || (myturn && piece === piece.toLowerCase() && clientId!==player1)) {
         setSelectedCell({ rowIndex, colIndex });
       }
-      //deseleziona la cella se premo altrove così da poter cambiare pezzo da spostare
-      //else {
-      //  setSelectedCell(null);
-      //}
-      //console.log("client celle -1", cells);
     } else if (selectedCell) {
-      //console.log("client celle 0", cells);
-      let newCells = cells.slice();
+      let newCells = cells.map(row => [...row]);
       let temp = newCells[selectedCell.rowIndex][selectedCell.colIndex]
-      //console.log("client celle", cells);
-        // Controlla se la mossa è valida rispettando le regole degli scacchi
+      // Controlla se la mossa è valida rispettando le regole degli scacchi
       let valid_move = isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells);
-      console.log(valid_move);
       if (valid_move) {
-        console.log("aaaaaaaaaaaaaaaa");
         move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
         if (newCells[rowIndex][colIndex] !== '') {
-            //socket?.emit("new_move", move + "+");
             move += "+";
-        } else {
-            //socket?.emit("new_move", move);
         }
+
         // Svuota la casella di partenza
         newCells[selectedCell.rowIndex][selectedCell.colIndex] = '';
         // Sposta il pezzo nella nuova posizione
         newCells[rowIndex][colIndex] = temp;
-        setCells(newCells);
-        setSelectedCell(null);
         for (let c = 0; c< 8; c++) {
           
-          if(cells[0][c] === 'P') {
-            //console.log(cells);
-            cells[0][c] = 'Q';
+          if(newCells[0][c] === 'P') {
+            newCells[0][c] = 'Q';
           }
-          else if(cells[7][c] === 'p') {
-            cells[0][c] = 'q';
+          else if(newCells[7][c] === 'p') {
+            newCells[0][c] = 'q';
           }
         }
-        socket?.emit("update_board", newCells, move);
+
+        if (clientId===player1) {
+          const whiteKingPosition = findpiece("K", 'white', newCells);
+          if(isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', newCells)) {
+            if(!isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', newCells)) {
+              socket?.emit("update_board", newCells, move);
+              setCells(newCells);
+              setSelectedCell(null);
+            } 
+            
+          } else {
+            socket?.emit("update_board", newCells, move);
+            setCells(newCells);
+            setSelectedCell(null);
+          }
+        } else {
+          const blackKingPosition = findpiece("k", 'black', newCells);
+          if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
+            if(!isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
+              socket?.emit("update_board", newCells, move);
+              setCells(newCells);
+              setSelectedCell(null);
+            } 
+            
+          } else {
+            socket?.emit("update_board", newCells, move);
+            setCells(newCells);
+            setSelectedCell(null);
+          }
+        }
+        
         if (temp === 'K'){setWhiteKingHasMoved(true);}
         else if (temp === "k"){setBlackKingHasMoved(true);}
         else if (temp === "R" && selectedCell.colIndex === 0){setWhiteLRookHasMoved(true);}
@@ -235,17 +228,13 @@ export default function Home() {
       }
       else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
         // Arrocco bianco corto
-        console.log("bbbbbbbbbbbbbbbbbbbbbbbbb");
-        console.log("rowIndex, colIndex");
         if (rowIndex === 7 && colIndex === 6) {
           setWhiteRRookHasMoved(true);
-          //socket?.emit("new_move", "O-O");
           move = "O-O";
       }
       // Arrocco bianco lungo
       else if (rowIndex === 0 && colIndex === 2) {
           setWhiteLRookHasMoved(true);
-          //socket?.emit("new_move", "O-O-O");
           move = "O-O-O";
       }
       setWhiteKingHasMoved(true); // Imposta il re bianco come mosso
@@ -253,18 +242,14 @@ export default function Home() {
       setSelectedCell(null);
       socket?.emit("update_board", newCells, move);
     }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
-      console.log("cccccccccccccccccccccccccccc");
-      console.log("Arrocco nero");
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
           setBlackLRookHasMoved(true);
-          //socket?.emit("new_move", "o-o");
           move = "o-o";
           }
           // Arrocco nero lungo
           else if (rowIndex === 7 && colIndex === 6) {
               setBlackRRookHasMoved(true);
-              //socket?.emit("new_move", "o-o-o");
               move = "o-o-o";
           }
           setCells(newCells);
@@ -273,8 +258,6 @@ export default function Home() {
           setBlackKingHasMoved(true); // Imposta il re nero come mosso
       }
       else {
-        //console.log("null");
-        console.log("ddddddddddddddddddddddddd");
         setSelectedCell(null);
       }}
       
@@ -328,7 +311,7 @@ export default function Home() {
               >
                 {cell !== '' ? (
                     <div style={{ transform: clientId !== player1 ? 'rotate(180deg)' : 'none' }}>
-                      {cell}
+                      {renderCellContent(cell)}
                     </div>
                   ) : ""}
               </div>

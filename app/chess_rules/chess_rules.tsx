@@ -8,8 +8,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     const deltay = Math.abs(startRow - endRow);
     const deltaY = Math.abs(endRow - startRow);
 
-    const whiteKingPosition = findpiece("K", 'white', cells);
-    const blackKingPosition = findpiece("k", 'black', cells);
+    
     
     // Verifica se la destinazione è la stessa posizione di partenza per evitare che il pezzo vada su se stesso
     if (startRow === endRow && startCol === endCol) {
@@ -52,7 +51,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                 //
                 return true;
             }
-        } else if ((startRow - endRow === 1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
+        } else if ((startRow - endRow === 1) && deltax === 1 && destinationPiece !== '' && destinationPiece !== piece) {
             //console.log(endRow);
             //if (endRow === 0) {
             //    cells[0][endCol] = "Q";
@@ -83,7 +82,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                 //}
                 return true;
             }
-        } else if ((startRow - endRow === -1) && deltay === 1 && destinationPiece !== '' && destinationPiece !== piece) {
+        } else if ((startRow - endRow === -1) && deltax === 1 && destinationPiece !== '' && destinationPiece !== piece) {
             //if (isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
             //    let cell3 = cells.slice();
             //    cell3[endRow][endCol]= piece;
@@ -217,13 +216,13 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                     return false; // Se non si muove lungo una riga, una colonna o una diagonale, la mossa non è valida
                 }
 
-                console.log("posso spostare la regina in quel punto", cells[endRow][endCol] );
+                //console.log("posso spostare la regina in quel punto", cells[endRow][endCol] );
                 return true;  // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
             
         
         
         case 'K': // Re 
-            if ((deltax <= 1 && deltay <= 1 && deltax >= -1 && deltay >= -1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
+            if ((deltax <= 1 && deltay <= 1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
                 //if (piece === piece.toLocaleLowerCase() && isUnderAttack(blackKingPosition.row, blackKingPosition.col, "white", cells)) {
                 //    let cell3 = cells.slice();
                 //    cell3[endRow][endCol]= piece;
@@ -250,6 +249,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
 }
 
 export function isValidCastle(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][], kingMoved: boolean, LRookMoved: boolean, RRookMoved: boolean) {
+    console.log("guardando arrocco");
     const piece = cells[startRow][startCol];
     const destinationPiece = cells[endRow][endCol]; // Pezzo nella posizione di destinazione
 
@@ -320,9 +320,10 @@ export function isValidCastle(startRow: number, startCol: number, endRow: number
 
 // Funzione per verificare se una posizione è sotto attacco
 export function isUnderAttack(row: number, col: number, attackingColor: string, cells1: string[][]) {
+    console.log("controllando attacchi");
     // Trova il colore opposto
     const defendingColor = attackingColor === "white" ? "black" : "white";
-    console.log("attaccking color", attackingColor);
+    //console.log("attaccking color", attackingColor);
     // Per ogni cella sulla scacchiera
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
@@ -333,7 +334,7 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
             if ((piece.toLowerCase() === piece && defendingColor === "white") || (piece.toUpperCase() === piece && defendingColor === "black")) {
                 // Verifica se il pezzo può muoversi sulla posizione specificata
                 //console.log(piece);
-                if (piece === "Q"){console.log("le mie palle",cells1);}
+                //if (piece === "Q"){console.log("le mie palle",cells1);}
 
                 if (isValidMove(i, j, row, col, cells1)) {
                     console.log("the piece attacking is: ",piece);
@@ -350,11 +351,13 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
 
 export function isCheckMate(kingRow: number, kingCol: number, kingColor: string, cells: string[][]) {
     const attackingColor = kingColor === "white" ? "black" : "white";
+    console.log("primo arrivo",cells);
     if (!isUnderAttack(kingRow, kingCol, attackingColor, cells)) {
-        console.log("king not under attack");
+        //console.log("king not under attack");
         return false; // Il re non è sotto scacco, quindi non c'è scacco matto
     } else {
         console.log("king under attackkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
+        console.log("arrivo celle", cells);
         // Itera attraverso tutte le possibili mosse del re e verifica se in almeno una di esse il re non è più sotto scacco
         for (let rowOffset = -1; rowOffset <= 1; rowOffset++) {
             for (let colOffset = -1; colOffset <= 1; colOffset++) {
@@ -366,20 +369,24 @@ export function isCheckMate(kingRow: number, kingCol: number, kingColor: string,
                 const newCol = kingCol + colOffset;
                 if (newRow > 7 || newRow < 0 || newCol > 7 || newCol < 0){continue;}
                 // Verifica se la mossa è valida e se dopo la mossa il re non è più sotto scacco
+                //console.log("arrivo celle", cells);
                 if (isValidMove(kingRow, kingCol, newRow, newCol, cells)) {
-                    const cell2 = cells.slice();
+                    //console.log("strano", cells);
+                    const cell2 = cells.map(row => [...row]);
+                    console.log("celle2",cell2);
                     cell2[newRow][newCol] = kingColor === "white" ? "K" : "k";
                     cell2[kingRow][kingCol] = '';
+                    //console.log("tentativi", cell2);
                     if(!isUnderAttack(newRow, newCol, attackingColor, cell2)){
                         // Se una mossa è possibile e il re non è più sotto scacco, non c'è scacco matto
-                        console.log("king can move away");
+                        console.log("king can move away", cell2);
                         return false;
                     }
                     
                 }
             }
         }
-
+        
         if (caninterfer(kingRow, kingCol, kingColor, cells)) {
             console.log("piece can defend the king");
             return false;
@@ -403,6 +410,7 @@ export function findpiece(piecename: string, pieceColor: string, cells: string[]
 }
 
 export function caninterfer(kingRow: number, kingCol: number, kingColor: string, cells: string[][]): boolean {
+    //console.log("arrivo celle", cells);
     let attackingColor = kingColor === "white" ? "black" : "white";
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -411,11 +419,12 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
                 for (let row1 = 0; row1 < 8; row1++) {
                     for (let col1 = 0; col1 < 8; col1++) {
                         if(isValidMove(row, col, row1, col1, cells)){
-                            let trycell = cells.slice();
+                            let trycell = cells.map(row => [...row]);
                             trycell[row1][col1] = piece;
                             trycell[row][col] = '';
-                            if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
-                                console.log("white piece can interfer");
+                            const whiteKingPosition = findpiece("K", 'white', trycell);
+                            if(!isUnderAttack(whiteKingPosition.row, whiteKingPosition.col, attackingColor, trycell)) {
+                                console.log("white piece can interfer", piece, trycell);
                                 return true;
                             }
                         }
@@ -426,11 +435,13 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
                 for (let row1 = 0; row1 < 8; row1++) {
                     for (let col1 = 0; col1 < 8; col1++) {
                         if(isValidMove(row, col, row1, col1, cells)){
-                            let trycell = cells.slice();
+                            let trycell = cells.map(row => [...row]);
                             trycell[row1][col1] = piece;
                             trycell[row][col] = '';
-                            if(!isUnderAttack(kingRow, kingCol, attackingColor, trycell)) {
-                                console.log("black piece can interfer");
+                            
+                            const blackKingPosition = findpiece("k", 'black', trycell);
+                            if(!isUnderAttack(blackKingPosition.row, blackKingPosition.col, attackingColor, trycell)) {
+                                console.log("black piece can interfer", piece, trycell);
                                 return true;
                             }
                         }
@@ -444,3 +455,46 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
 
 }
 
+
+
+
+export const renderCellContent = (content: string | JSX.Element) => {
+    //PEZZI BIANCHI
+    if (content === 'R')  { //TORRE
+      return  <img src={'/torrebianca.png'} alt="White Rook" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'P') { //PEDONE
+      return <img src={'/pedonebianco.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'N') { //CAVALLO
+      return <img src={'/cavallobianco.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'B') { //ALFIERE
+      return <img src={'/alfierebianco.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'Q') { //REGINA
+      return <img src={'/reginabianca.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'K') { //RE
+      return <img src={'/rebianco.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    //PEZZI NERI
+    if (content === 'r')  { //TORRE
+      return  <img src={'/torrenera.png'} alt="White Rook" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'p') { //PEDONE
+      return <img src={'/pedonenero.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'n') { //CAVALLO
+      return <img src={'/cavallonero.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'b') { //ALFIERE
+      return <img src={'/alfierenero.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'q') { //REGINA
+      return <img src={'/reginanera.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+    if (content === 'k') { //RE
+      return <img src={'/renero.png'} alt="White pund" style={{width:'200%', height:'200%', objectFit:'cover'}}/>;
+    }
+  };

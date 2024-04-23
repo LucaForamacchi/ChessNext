@@ -64,6 +64,28 @@ io.on("connection", (socket) => {
     }
   }
 
+  socket.on("bot", () => {
+    // Aggiungi un nuovo giocatore alla lobby corrente
+    if (socket.lobby && lobbies[socket.lobby]) {
+      if (lobbies[socket.lobby].players.length < 2) {
+        lobbies[socket.lobby].players.push("bot");
+        console.log(`Bot joined lobby ${socket.lobby}`);
+        // Invia un messaggio di conferma al client
+        socket.emit("bot_joined", socket.lobby);
+      } else {
+        console.log(`Cannot add bot to full lobby ${socket.lobby}`);
+        // Invia un messaggio di errore al client se la lobby è piena
+        socket.emit("bot_join_failed", "Lobby is full");
+      }
+    } else {
+      console.log(`Cannot add bot, no lobby found for socket ${socket.id}`);
+      // Invia un messaggio di errore al client se non è presente una lobby per il socket
+      socket.emit("bot_join_failed", "No lobby found");
+    }
+  });
+  
+
+
   socket.on("message", (message) => {
     io.to(socket.lobby).emit("message", message);
   });
@@ -72,9 +94,9 @@ io.on("connection", (socket) => {
     lobbies[socket.lobby].board = newBoard;
     // Passa il turno al giocatore successivo dopo ogni mossa
     lobbies[socket.lobby].currentTurn = lobbies[socket.lobby].players.find(player => player !== socket.id);
-    
+    //console.log(newBoard);
     io.to(socket.lobby).emit("update_board", newBoard, lobbies[socket.lobby].currentTurn, move);
-    io.to(socket.lobby).emit("isCheckMate");
+    io.to(socket.lobby).emit("isCheckMate", newBoard);
   });
 
   socket.on("checkmate", () =>{
