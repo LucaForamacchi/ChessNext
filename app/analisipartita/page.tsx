@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { renderCellContent } from '../chess_rules/chess_rules';
 
-
 export default function Home() {
   const [hover1vs1, setHover] = useState(false);
   const [moves, setMoves] = useState<string[]>([]);
@@ -19,7 +18,6 @@ export default function Home() {
     ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
     ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
   ]);
-  
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
 
@@ -100,7 +98,7 @@ export default function Home() {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
           >
-            indietro
+            Indietro
           </button>
         </Link>
       </div>
@@ -137,9 +135,22 @@ export default function Home() {
         Mosse effettuate: {moves.join(' , ')}
       </div>
       <div>
-        <button onClick={handlePrevMove}>{'<'}</button>
-        <button onClick={handleNextMove}>{'>'}</button>
+        <button onClick={handlePrevMove}
+            style={{ padding: '8px 8px', backgroundColor: hover1vs1 ? '#218838' : '#28a745', color: 'white', borderRadius: '5px', fontSize: '18px', border: 'none', cursor: 'pointer' }}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+          >
+            {'<---'}
+          </button>
+          <button onClick={handleNextMove}
+            style={{ padding: '8px 8px', backgroundColor: hover1vs1 ? '#218838' : '#28a745', color: 'white', borderRadius: '5px', fontSize: '18px', border: 'none', cursor: 'pointer' }}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+          >
+            {'--->'}
+          </button>
       </div>
     </main>
   )
 };
+
