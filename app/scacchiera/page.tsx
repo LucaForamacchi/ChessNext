@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
 import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent } from '../chess_rules/chess_rules';
+import { inserisciPartita } from '../database/db';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -83,15 +84,26 @@ export default function Home() {
         setMoves(moves => [...moves, new_move]);
       });
       
-      socket.on("isCheckMate", () => {
+      socket.on("isCheckMate", async () => {
         const whiteKingPosition = findpiece("K", 'white', cells);
         const blackKingPosition = findpiece("k", 'black', cells);
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
           socket.emit("end-game", "black");
+          const movesSenzaFreccia: string[] = moves.map(move => move.replace(" => ", ""));
+          const stringMoves: string = movesSenzaFreccia.join(" ");
+          const db = await inserisciPartita('black', stringMoves, '20:02:202');
+          if (db) {
+            console.log('Partita inserita nel database');
+          }   
 
         } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
           socket.emit("end-game", "white");
-
+          const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
+          const stringMoves: string = movesSenzaFreccia.join(" ");
+          const db = await inserisciPartita('white', stringMoves, '20:02:202');
+          if (db) {
+            console.log('Partita inserita nel database');
+          }   
         }
       });
     
@@ -115,7 +127,7 @@ export default function Home() {
             setResultMessage("lose");
             setEnd(true);
           }
-        }
+        }     
       });
 
       

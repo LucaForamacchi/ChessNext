@@ -9,9 +9,13 @@ interface Partita {
   data: Date;
 }
 
+const [partiteFromDB, setPartiteFromDB] = useState<Partita[]>([]);
+const [rigaSelezionata, setRigaSelezionata] = useState<number | null>(null);
+export const mossePartita = () => {
+  const riga = partiteFromDB.findIndex(rigaSelezionata);
+}
+
 export default function PartitePage() {
-  const [partiteFromDB, setPartiteFromDB] = useState<Partita[]>([]);
-  const [rigaSelezionata, setRigaSelezionata] = useState<number | null>(null);
   const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
   const [hover1vs1, setHover] = useState(false);
   const router = useRouter()
