@@ -26,6 +26,7 @@ io.on("connection", (socket) => {
         ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
         ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
       ],
+      moves: [],
       full: false,
       // Inizializza il turno corrente quando la lobby viene creata
       currentTurn: socket.id,
@@ -65,22 +66,17 @@ io.on("connection", (socket) => {
   }
 
   socket.on("bot", () => {
-    // Aggiungi un nuovo giocatore alla lobby corrente
+    // Aggiungi un bot alla lobby corrente
     if (socket.lobby && lobbies[socket.lobby]) {
       if (lobbies[socket.lobby].players.length < 2) {
         lobbies[socket.lobby].players.push("bot");
         console.log(`Bot joined lobby ${socket.lobby}`);
-        // Invia un messaggio di conferma al client
-        socket.emit("bot_joined", socket.lobby);
+        socket.lobby.full = true;
       } else {
         console.log(`Cannot add bot to full lobby ${socket.lobby}`);
-        // Invia un messaggio di errore al client se la lobby è piena
-        socket.emit("bot_join_failed", "Lobby is full");
       }
     } else {
       console.log(`Cannot add bot, no lobby found for socket ${socket.id}`);
-      // Invia un messaggio di errore al client se non è presente una lobby per il socket
-      socket.emit("bot_join_failed", "No lobby found");
     }
   });
   
@@ -92,10 +88,10 @@ io.on("connection", (socket) => {
 
   socket.on("update_board", (newBoard, move) => {
     lobbies[socket.lobby].board = newBoard;
+    lobbies[socket.lobby].moves.push(move);
     // Passa il turno al giocatore successivo dopo ogni mossa
     lobbies[socket.lobby].currentTurn = lobbies[socket.lobby].players.find(player => player !== socket.id);
-    //console.log(newBoard);
-    io.to(socket.lobby).emit("update_board", newBoard, lobbies[socket.lobby].currentTurn, move);
+    io.to(socket.lobby).emit("update_board", newBoard, lobbies[socket.lobby].currentTurn, lobbies[socket.lobby].moves);
     io.to(socket.lobby).emit("isCheckMate", newBoard);
   });
 
@@ -109,7 +105,6 @@ io.on("connection", (socket) => {
 
   socket.on("new_move", (move) =>{
     io.to(socket.lobby).emit("new_move", move);
-    //io.to(socket.lobby.players).emit("new_move", move);
   });
   socket.on("disconnect", () => {
     console.log("User disconnected.");

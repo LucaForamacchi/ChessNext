@@ -22,6 +22,7 @@ export default function Home() {
   
 
   const [moves, setMoves] = useState<string[]>([]);
+  const [lastMove, setLastMove] = useState('');
   const [hover1vs1, setHover] = useState(false);
   const [timer, setTimer] = useState<number>(600);
   const [lobby, setLobby] = useState("");
@@ -74,14 +75,13 @@ export default function Home() {
         setplayer1(creatorid[0]);
       });
 
-      socket.on("update_board", (newCells, currentTurn, new_move) => {
+      socket.on("update_board", (newCells, currentTurn, new_moves) => {
         setCells(cells => [...newCells]);
         // Verifica se il turno corrente appartiene al socket corrente
         const isMyTurn = currentTurn === socket.id;
         // Imposta il turno corrente
         setTurn(isMyTurn);
-        //se tolgo la riga sotto si passano solo una volta i messaggi
-        setMoves(moves => [...moves, new_move]);
+        setMoves(moves => [...new_moves]);
       });
       
       socket.on("isCheckMate", async () => {
@@ -145,17 +145,15 @@ export default function Home() {
       };
   
       // Avvia l'intervallo solo se è il tuo turno
-      if (!myturn && timer > 0) {
+      if (myturn && timer > 0) {
         intervalId = setInterval(decrementTimer, 1000);
       }
       if (timer === 0){
         if(clientId===player1){
-          setResultMessage("Lose");
-          setEnd(true);
+          socket.emit("end-game", "black");
         }
         else if (clientId!==player1){
-          setResultMessage("Lose");
-          setEnd(true);
+          socket.emit("end-game", "white");
         }
       }
       // Pulisci l'intervallo quando il componente viene smontato o quando non è più il tuo turno
@@ -166,7 +164,6 @@ export default function Home() {
   
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
-    //console.log("atomico",cells);
     if (!lobby || end) {
         return;
     }
@@ -182,7 +179,8 @@ export default function Home() {
       // Controlla se la mossa è valida rispettando le regole degli scacchi
       let valid_move = isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells);
       if (valid_move) {
-        move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
+        move = `${letters[selectedCell.colIndex]}${8-selectedCell.rowIndex} => ${letters[colIndex]}${8-rowIndex}`;
+        
         if (newCells[rowIndex][colIndex] !== '') {
             move += "+";
         }
@@ -318,7 +316,7 @@ export default function Home() {
               <div
                 key={`${rowIndex}-${colIndex}`}
                 className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
-                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${rowIndex + 1}`) ? 'yellow' : undefined }}
+                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${8-rowIndex}`) ? 'yellow' : undefined }}
                 onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
                 {cell !== '' ? (
