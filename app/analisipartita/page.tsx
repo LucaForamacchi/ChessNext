@@ -10,14 +10,14 @@ export default function Home() {
   let [moveIndex, setMoveIndex] = useState<number>(0);
   
   const [cells, setCells] = useState<string[][]>([
-    ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'],
+    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
     ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
     Array(8).fill(''),
     Array(8).fill(''),
     Array(8).fill(''),
     Array(8).fill(''),
     ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    ['R', 'N', 'B', 'K', 'Q', 'B', 'N', 'R']
+    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
   ]);
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
