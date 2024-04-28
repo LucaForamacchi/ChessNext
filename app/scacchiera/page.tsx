@@ -74,6 +74,9 @@ export default function Home() {
       socket.on("lobby_joined", (lobbyName, creatorid) => {
         setLobby(lobbyName);
         setplayer1(creatorid[0]);
+        //if (clientId!==player1){
+        //  setTurn(false);
+        //}
       });
 
       socket.on("update_board", (newCells, currentTurn, new_moves) => {
@@ -207,7 +210,7 @@ export default function Home() {
     const piece = cells[rowIndex][colIndex];
     if (!selectedCell && piece !== '') {
       // Controlla se è il turno del giocatore corrente
-      if ((myturn && piece === piece.toUpperCase() && clientId===player1) || (myturn && piece === piece.toLowerCase() && clientId!==player1)) {
+      if ((myturn && piece === piece.toUpperCase() && clientId===player1) || (myturn && piece === piece.toLowerCase() && clientId!==player1 && moves.length!==0)) {
         setSelectedCell({ rowIndex, colIndex });
       }
     } else if (selectedCell) {
