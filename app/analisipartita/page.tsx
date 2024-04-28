@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { renderCellContent } from '../chess_rules/chess_rules';
+import { mosse } from "../database/page";
 
 export default function Home() {
   const [hover1vs1, setHover] = useState(false);
@@ -9,14 +10,14 @@ export default function Home() {
   let [moveIndex, setMoveIndex] = useState<number>(0);
   
   const [cells, setCells] = useState<string[][]>([
-    ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+    ['r', 'n', 'b', 'k', 'q', 'b', 'n', 'r'],
     ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
     Array(8).fill(''),
     Array(8).fill(''),
     Array(8).fill(''),
     Array(8).fill(''),
     ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-    ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+    ['R', 'N', 'B', 'K', 'Q', 'B', 'N', 'R']
   ]);
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
   const numbers = [8, 7, 6, 5, 4, 3, 2, 1];
@@ -83,14 +84,15 @@ export default function Home() {
     }
   };
 
-  const testMoves = 'e2 e4 d7 d5 b1 c3 d5 e4 c3 e4';
-  const testMovesArray = testMoves.split(' ');
-  useEffect(() => {
-    setMoves(testMovesArray);
-  }, []);
-
+  if (mosse != null) {
+    const testMovesArray = mosse.split(' ');
+    useEffect(() => {
+      setMoves(testMovesArray);
+    }, []);
+  }
+  
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: '#c3e6cb', position: 'relative' }}>
+    <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: 'black', position: 'relative' }}>
       <div className="button-wrapper" style={{ position: 'absolute', top: 10, right: 10 }}>
         <Link href="/database" passHref>
           <button

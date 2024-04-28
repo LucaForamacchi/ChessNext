@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent } from '../chess_rules/chess_rules';
+import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent, calculateScore } from '../chess_rules/chess_rules';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -62,7 +62,7 @@ export default function Home() {
         socket.emit("bot");
       });
   
-      socket.on("update_board", (newCells, currentTurn, new_move) => {
+      socket.on("update_board", (newCells, currentTurn, new_moves) => {
         const isMyTurn = currentTurn === socket.id;
         // Imposta il turno corrente
         if(newCells !== lastcells) {
@@ -70,12 +70,7 @@ export default function Home() {
           setlastCells(newCells);
         }
         
-        // Verifica se è il turno corrente del giocatore
-        if (myturn && lastMove !== new_move) {
-          setMoves(moves => [...moves, new_move]);
-          setLastMove(new_move);
-          
-        }
+        setMoves(moves => [...new_moves]);
 
         const whiteKingPosition = findpiece("K", 'white', newCells);
         const blackKingPosition = findpiece("k", 'black', newCells);
@@ -115,7 +110,7 @@ export default function Home() {
         return () => clearInterval(interval);
       }
     }
-  }, [socket]); // Aggiunta cells come dipendenza
+  }, [socket, cells]); // Aggiunta cells come dipendenza
   
   
   
@@ -229,88 +224,18 @@ export default function Home() {
 
   const makeComputerMove = () => {
     //le mosse vanno dispari per spostare i pezzi neri
-    findbestmove('black',cells, 2);
+    findbestmove('black',cells, 4);
     bestscore = 0;
-    
+    whitebestscore = 0;
     let [row,col, row2, col2] = bestmove;
     let piece = cells[row][col];
-    console.log("il pezzo", piece);
     cells[row2][col2] = piece;
     cells[row][col] = '';
     const move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}`;
     socket?.emit("update_board", cells, move)
   };
   
-  // Funzione per calcolare il punteggio di una mossa
-  const calculateScore = (cells: any[]) => {
-    const pieceValues: Record<string, number>  = {
-      'p': 1, // Pedone
-      'r': 5, // Torre
-      'n': 3, // Cavallo
-      'b': 3, // Alfiere
-      'q': 9, // Regina
-      'k': 100 // Re (valore arbitrario, in quanto non è desiderabile sacrificare il re)
-    };
   
-    // Matrice dei punteggi posizionali dei pedoni per il computer nero
-    const pawnPositionScores = [
-      [ 0,  0,  0,  0,  0,  0,  0,  0],
-      [ 1,  1,  1,  0,  0,  1,  1,  1],
-      [ 0,  0,  0,0.5,0.5,  0,  0,  0],
-      [ 0,  0,  0,  1,  1,  0,  0,  0],
-      [0.5,0.5, 1,1.5,1.5, 1, 0.5,0.5],
-      [ 1,  1,  2,  3,  3,  2,  1,  1],
-      [ 5,  5,  5,  5,  5,  5,  5,  5],
-      [ 9,  9,  9,  9,  9,  9,  9,  9]
-    ];
-
-    const knightPositionScores = [
-      [-5, 0, -3, -3, -3, -3, 0, -5],
-      [-4, -2,  0,  0,  0,  0, -2, -4],
-      [-3,  0,  1,  1.5,  1.5,  1,  0, -3],
-      [-3,  0.5,  1.5, 2, 2,  1.5, 0.5, -3],
-      [-3,  0,  1.5, 2, 2,  1.5, 0, -3],
-      [-3,  0.5,  1,  1.5,  1.5,  1,  0.5, -3],
-      [-4, -2,  0,  0.5,  0.5,  0, -2, -4],
-      [-5, 0, -3, -3, -3, -3, 0, -5]
-    ];
-    
-  
-    let myScore = 0;
-    let opponentScore = 0;
-  
-    // Calcola il punteggio totale dei pezzi sulla scacchiera
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        const piece = cells[i][j];
-        if (piece !== '') {
-          // Se il pezzo è nero, aggiungi il suo valore al punteggio dell'avversario
-          if (piece === piece.toLowerCase()) {
-            myScore += pieceValues[piece.toLowerCase()]; // Utilizza lettere maiuscole per il pezzo avversario
-            // Se il pezzo è un pedone nero, aggiungi anche il punteggio posizionale
-            if (piece === 'p') {
-              myScore += pawnPositionScores[i][j];
-            }
-            else if (piece === 'n') {
-              myScore += knightPositionScores[i][j];
-            }
-          } else { // Se il pezzo non è nero, aggiungi il suo valore al tuo punteggio
-            opponentScore += pieceValues[piece.toLowerCase()];
-            // Se il pezzo è un pedone bianco, aggiungi anche il punteggio posizionale
-            if (piece === 'P') {
-              opponentScore += pawnPositionScores[7-i][j]; // Inverto la riga
-            }
-            if (piece === 'N') {
-              opponentScore += knightPositionScores[i][j]; // Inverto la riga
-            }
-          }
-        }
-      }
-    }
-  
-    // Restituisci la differenza tra il tuo punteggio e quello dell'avversario
-    return myScore - opponentScore;
-  };
 
   let initialscore = 0;
   let winitialscore = 0;
@@ -323,7 +248,7 @@ export default function Home() {
 
   const findbestmove = (color: string, cells: string[][], depth: number) => {
     // Condizione di terminazione: raggiunto il livello massimo di profondità
-    if (depth === -1) {
+    if (depth === 0) {
       return calculateScore(cells);
     }
 
@@ -351,13 +276,14 @@ export default function Home() {
                 newCells[rowIndex][colIndex] = '';
                 // Calcola il punteggio per questa mossa
                 const score = calculateScore(newCells);
-                if (depth === 2) {
+                if (depth === 4) {
                   initialscore = score;
                   initialmove = [rowIndex, colIndex, i, j];
                 }
+                //console.log(initialmove, score, bestscore, newCells);
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
                 if (findbestmove('white', newCells, depth - 1) >= initialscore && score >= bestscore) {
-                  //console.log(initialmove, score, bestscore, newCells);
+                  console.log(initialmove, score, bestscore, newCells);
                   bestmove = initialmove;
                   bestscore = score;
                 }
@@ -376,12 +302,13 @@ export default function Home() {
                 newCells[rowIndex][colIndex] = '';
                 // Calcola il punteggio per questa mossa
                 const score = calculateScore(newCells);
-                if (depth === 1) {
+                if (depth === 3) {
                   winitialscore = score;
                   winitialmove = [rowIndex, colIndex, i, j];
                 }
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
                 if (findbestmove('black', newCells, depth - 1) <= winitialscore && score <= whitebestscore) {
+                  console.log(winitialmove, score, whitebestscore, newCells);
                   whitebestmove = initialmove;
                   whitebestscore = score;
                 }

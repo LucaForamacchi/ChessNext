@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
 import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent } from '../chess_rules/chess_rules';
 import { inserisciPartita } from '../database/db';
+import { Console } from 'console';
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -22,6 +23,7 @@ export default function Home() {
   
 
   const [moves, setMoves] = useState<string[]>([]);
+  const [lastMove, setLastMove] = useState('');
   const [hover1vs1, setHover] = useState(false);
   const [timer, setTimer] = useState<number>(600);
   const [lobby, setLobby] = useState("");
@@ -65,7 +67,7 @@ export default function Home() {
     return () => {
       newSocket.close();
     };
-  }, []);
+  }, []); 
 
   useEffect(() => {
     if (socket) {
@@ -74,14 +76,13 @@ export default function Home() {
         setplayer1(creatorid[0]);
       });
 
-      socket.on("update_board", (newCells, currentTurn, new_move) => {
+      socket.on("update_board", (newCells, currentTurn, new_moves) => {
         setCells(cells => [...newCells]);
         // Verifica se il turno corrente appartiene al socket corrente
         const isMyTurn = currentTurn === socket.id;
         // Imposta il turno corrente
         setTurn(isMyTurn);
-        //se tolgo la riga sotto si passano solo una volta i messaggi
-        setMoves(moves => [...moves, new_move]);
+        setMoves(moves => [...new_moves]);
       });
       
       socket.on("isCheckMate", async () => {
@@ -89,29 +90,35 @@ export default function Home() {
         const blackKingPosition = findpiece("k", 'black', cells);
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
           socket.emit("end-game", "black");
-          const movesSenzaFreccia: string[] = moves.map(move => move.replace(" => ", ""));
+          /*const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
           const stringMoves: string = movesSenzaFreccia.join(" ");
           const db = await inserisciPartita('black', stringMoves, '20:02:202');
           if (db) {
             console.log('Partita inserita nel database');
-          }   
+          }   */
 
         } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
           socket.emit("end-game", "white");
-          const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
-          const stringMoves: string = movesSenzaFreccia.join(" ");
-          const db = await inserisciPartita('white', stringMoves, '20:02:202');
-          if (db) {
-            console.log('Partita inserita nel database');
-          }   
+           
         }
       });
     
-      socket.on("result", (result_color) => {
+      socket.on("result", async (result_color) => {
+        console.log(result_color);
         if (clientId === player1) {
           if (result_color === "white") {
             setResultMessage("win");
             setEnd(true);
+            /*
+            const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
+            if (movesSenzaFreccia.length > 0 && movesSenzaFreccia[movesSenzaFreccia.length - 1].endsWith('+')) {
+              const stringMoves = movesSenzaFreccia.map(movesSenzaFreccia => movesSenzaFreccia.endsWith('+') ? movesSenzaFreccia.slice(0, -1) : movesSenzaFreccia).join(' ');
+              console.log(movesSenzaFreccia);
+              const db = await inserisciPartita(result_color, stringMoves, '20:02:202');
+              if (db) {
+                console.log('Partita inserita nel database');
+              }
+            }*/
           }
           else {
             setResultMessage("lose");
@@ -122,14 +129,28 @@ export default function Home() {
           if (result_color === "black") {
             setResultMessage("win");
             setEnd(true);
+            /*
+            const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
+            if (movesSenzaFreccia.length > 0 && movesSenzaFreccia[movesSenzaFreccia.length - 1].endsWith('+')) {
+              const stringMoves = movesSenzaFreccia.map(movesSenzaFreccia => movesSenzaFreccia.endsWith('+') ? movesSenzaFreccia.slice(0, -1) : movesSenzaFreccia).join(' ');
+              console.log(movesSenzaFreccia);
+              const db = await inserisciPartita(result_color, stringMoves, '20:02:202');
+              if (db) {
+                console.log('Partita inserita nel database');
+              }
+        }*/
           }
           else {
             setResultMessage("lose");
             setEnd(true);
           }
-        }     
+        }
+        
       });
 
+      if (end === true) {
+        console.log("porco difhg  eò");
+      }
       
       //socket.emit("checkmate");
       let intervalId: NodeJS.Timeout;
@@ -145,17 +166,15 @@ export default function Home() {
       };
   
       // Avvia l'intervallo solo se è il tuo turno
-      if (!myturn && timer > 0) {
+      if (myturn && timer > 0) {
         intervalId = setInterval(decrementTimer, 1000);
       }
       if (timer === 0){
         if(clientId===player1){
-          setResultMessage("Lose");
-          setEnd(true);
+          socket.emit("end-game", moves, "black");
         }
         else if (clientId!==player1){
-          setResultMessage("Lose");
-          setEnd(true);
+          socket.emit("end-game", moves, "white");
         }
       }
       // Pulisci l'intervallo quando il componente viene smontato o quando non è più il tuo turno
@@ -164,9 +183,24 @@ export default function Home() {
     }
   }, [socket, cells]);
   
+  useEffect(() => {
+    const aggiornaMoves = async () => {
+      const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
+      if (movesSenzaFreccia.length > 0 && movesSenzaFreccia[movesSenzaFreccia.length - 1].endsWith('+')) {
+        const stringMoves = movesSenzaFreccia.map(movesSenzaFreccia => movesSenzaFreccia.endsWith('+') ? movesSenzaFreccia.slice(0, -1) : movesSenzaFreccia).join(' ');
+        console.log(movesSenzaFreccia);
+        const db = await inserisciPartita('white', stringMoves, '20:02:202');
+        if (db) {
+          console.log('Partita inserita nel database');
+        }
+      }
+    }
+    if (end === true) {
+      aggiornaMoves;
+    }
+  }, []); 
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
-    //console.log("atomico",cells);
     if (!lobby || end) {
         return;
     }
@@ -182,7 +216,8 @@ export default function Home() {
       // Controlla se la mossa è valida rispettando le regole degli scacchi
       let valid_move = isValidMove(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells);
       if (valid_move) {
-        move = `${letters[selectedCell.colIndex]}${selectedCell.rowIndex + 1} => ${letters[colIndex]}${rowIndex + 1}`
+        move = `${letters[selectedCell.colIndex]}${8-selectedCell.rowIndex} => ${letters[colIndex]}${8-rowIndex}`;
+        
         if (newCells[rowIndex][colIndex] !== '') {
             move += "+";
         }
@@ -273,8 +308,10 @@ export default function Home() {
         setSelectedCell(null);
       }}
       
-};
+  };
   
+  
+
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -318,7 +355,7 @@ export default function Home() {
               <div
                 key={`${rowIndex}-${colIndex}`}
                 className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
-                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${rowIndex + 1}`) ? 'yellow' : undefined }}
+                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${8-rowIndex}`) ? 'yellow' : undefined }}
                 onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
                 {cell !== '' ? (
