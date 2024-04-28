@@ -171,10 +171,10 @@ export default function Home() {
       }
       if (timer === 0){
         if(clientId===player1){
-          socket.emit("end-game", moves, "black");
+          socket.emit("end-game", "black");
         }
         else if (clientId!==player1){
-          socket.emit("end-game", moves, "white");
+          socket.emit("end-game", "white");
         }
       }
       // Pulisci l'intervallo quando il componente viene smontato o quando non è più il tuo turno
