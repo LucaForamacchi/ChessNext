@@ -369,7 +369,7 @@ export default function Home() {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
           >
-            indietro
+            Indietro
           </button>
         </Link>
       </div>
@@ -377,7 +377,7 @@ export default function Home() {
         <div className="grid grid-cols-1">
           <div className="p-4 w-12 h-12"></div>
           {numbers.map((number, index) => (
-            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center" style={{ color:'black'}}>{
               <div>
                {number} 
               </div>
@@ -386,7 +386,7 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-8 relative"> {/* Aggiunto il relative positioning */}
           {letters.map((letter, index) => (
-            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center" style={{ color:'black'}}>{
               <div>{letter}</div>
               }</div>
           ))}
@@ -394,7 +394,7 @@ export default function Home() {
             row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
+                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-slate-300' : 'bg-gray-500'} w-12 h-12 flex justify-center items-center` }
                 style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${numbers[rowIndex]}`) ? 'yellow' : undefined }}
                 onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
@@ -416,14 +416,14 @@ export default function Home() {
           )}
         </div>
       </div>
-      <div className="mt-4">
+      <div className="mt-4" style={{ color:'black'}}>
         Mosse effettuate: {moves.join(' , ')}
       </div>
       {lobby && (
-        <h2>You are in lobby: {lobby}</h2>
+        <h2 style={{ color:'black'}}>You are in lobby: {lobby}</h2>
       )}
 
-      <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px' }}>
+      <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px', color: 'black' }}>
         <h2 style={{ margin: '0' }}>Timer: {formatTime(timer)}</h2>
       </div>
     </main>

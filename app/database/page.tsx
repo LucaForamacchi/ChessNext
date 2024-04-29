@@ -10,6 +10,7 @@ interface Partita {
   data: string;
 }
 let mosse: string;
+let vincitore: string;
 
 export default function PartitePage() {
   const [partiteFromDB, setPartiteFromDB] = useState<Partita[]>([]);
@@ -34,6 +35,7 @@ export default function PartitePage() {
   const handleRigaCliccata = (index: number) => {
     const mosseRigaSelezionata = partiteFromDB[index].mosse;
     mosse=mosseRigaSelezionata;
+    vincitore=partiteFromDB[index].vincitore;
     setRigaSelezionata(index);
     router.push('/analisipartita');
   };
@@ -87,3 +89,4 @@ export default function PartitePage() {
 }
 
 export {mosse};
+export {vincitore};
