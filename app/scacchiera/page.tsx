@@ -2,9 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { io, Socket } from 'socket.io-client';
-import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent } from '../chess_rules/chess_rules';
-import { inserisciPartita } from '../database/db';
-import { Console } from 'console';
+import { isValidMove, isValidCastle, isCheckMate, findpiece, isUnderAttack, renderCellContent } from '../chess_rules/chess_rules'
 
 export default function Home() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -20,8 +18,6 @@ export default function Home() {
   ]);
   
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
-  
-
   const [moves, setMoves] = useState<string[]>([]);
   const [lastMove, setLastMove] = useState('');
   const [hover1vs1, setHover] = useState(false);
@@ -56,7 +52,6 @@ export default function Home() {
       // Se una lobby è disponibile, unisciti automaticamente ad essa
       setLobby(lobbyName);
       newSocket.emit("join_lobby", lobbyName);
-      
     });
 
     newSocket.on("no_lobby_available", () => {
@@ -93,16 +88,8 @@ export default function Home() {
         const blackKingPosition = findpiece("k", 'black', cells);
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
           socket.emit("end-game", "black");
-          /*const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
-          const stringMoves: string = movesSenzaFreccia.join(" ");
-          const db = await inserisciPartita('black', stringMoves, '20:02:202');
-          if (db) {
-            console.log('Partita inserita nel database');
-          }   */
-
         } else if (isCheckMate(blackKingPosition.row, blackKingPosition.col, "black", cells)) {
           socket.emit("end-game", "white");
-           
         }
       });
     
@@ -112,16 +99,6 @@ export default function Home() {
           if (result_color === "white") {
             setResultMessage("win");
             setEnd(true);
-            /*
-            const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
-            if (movesSenzaFreccia.length > 0 && movesSenzaFreccia[movesSenzaFreccia.length - 1].endsWith('+')) {
-              const stringMoves = movesSenzaFreccia.map(movesSenzaFreccia => movesSenzaFreccia.endsWith('+') ? movesSenzaFreccia.slice(0, -1) : movesSenzaFreccia).join(' ');
-              console.log(movesSenzaFreccia);
-              const db = await inserisciPartita(result_color, stringMoves, '20:02:202');
-              if (db) {
-                console.log('Partita inserita nel database');
-              }
-            }*/
           }
           else {
             setResultMessage("lose");
@@ -132,28 +109,13 @@ export default function Home() {
           if (result_color === "black") {
             setResultMessage("win");
             setEnd(true);
-            /*
-            const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
-            if (movesSenzaFreccia.length > 0 && movesSenzaFreccia[movesSenzaFreccia.length - 1].endsWith('+')) {
-              const stringMoves = movesSenzaFreccia.map(movesSenzaFreccia => movesSenzaFreccia.endsWith('+') ? movesSenzaFreccia.slice(0, -1) : movesSenzaFreccia).join(' ');
-              console.log(movesSenzaFreccia);
-              const db = await inserisciPartita(result_color, stringMoves, '20:02:202');
-              if (db) {
-                console.log('Partita inserita nel database');
-              }
-        }*/
           }
           else {
             setResultMessage("lose");
             setEnd(true);
           }
         }
-        
       });
-
-      if (end === true) {
-        console.log("porco difhg  eò");
-      }
       
       //socket.emit("checkmate");
       let intervalId: NodeJS.Timeout;
@@ -185,23 +147,6 @@ export default function Home() {
     
     }
   }, [socket, cells]);
-  
-  useEffect(() => {
-    const aggiornaMoves = async () => {
-      const movesSenzaFreccia: string[] = moves.map(move => move.replace(" =>", ""));
-      if (movesSenzaFreccia.length > 0 && movesSenzaFreccia[movesSenzaFreccia.length - 1].endsWith('+')) {
-        const stringMoves = movesSenzaFreccia.map(movesSenzaFreccia => movesSenzaFreccia.endsWith('+') ? movesSenzaFreccia.slice(0, -1) : movesSenzaFreccia).join(' ');
-        console.log(movesSenzaFreccia);
-        const db = await inserisciPartita('white', stringMoves, '20:02:202');
-        if (db) {
-          console.log('Partita inserita nel database');
-        }
-      }
-    }
-    if (end === true) {
-      aggiornaMoves;
-    }
-  }, []); 
 
   const handleCellClick = (rowIndex: number, colIndex: number) => {
     if (!lobby || end) {
@@ -312,8 +257,6 @@ export default function Home() {
       }}
       
   };
-  
-  
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -332,7 +275,7 @@ export default function Home() {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
           >
-            indietro
+            Indietro
           </button>
         </Link>
       </div>
@@ -340,7 +283,7 @@ export default function Home() {
         <div className="grid grid-cols-1" style={rotationStyle}>
           <div className="p-4 w-12 h-12"></div>
           {numbers.map((number, index) => (
-            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+            <div key={`number-${index}`} className="p-4 w-12 h-12 flex justify-center items-center" style={{ color:'black'}}>{
               <div style={rotationStyle}>
                {number} 
               </div>
@@ -349,7 +292,7 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-8 relative" style={rotationStyle}> {/* Aggiunto il relative positioning */}
           {letters.map((letter, index) => (
-            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center">{
+            <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center" style={{ color:'black'}}>{
               <div style={rotationStyle}>{letter}</div>
               }</div>
           ))}
@@ -357,7 +300,7 @@ export default function Home() {
             row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-gray-200' : 'bg-gray-400'} w-12 h-12` }
+                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-slate-300' : 'bg-gray-500'} w-12 h-12 flex justify-center items-center` }
                 style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${8-rowIndex}`) ? 'yellow' : undefined }}
                 onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
@@ -379,20 +322,19 @@ export default function Home() {
           )}
         </div>
       </div>
-      <div className="mt-4">
+      <div className="mt-4" style={{ color:'black'}}>
         Mosse effettuate: {moves.join(' , ')}
       </div>
       {lobby && (
-        <h2>You are in lobby: {lobby}</h2>
+        <h2 style={{ color:'black'}}>You are in lobby: {lobby}</h2>
       )}
       {(
-  <button >{player1}</button>
-)}
-    {(
-  <button >{clientId}</button>
-)}
-
-      <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px' }}>
+        <button style={{ color:'black'}}>{player1}</button>
+      )}
+      {(
+        <button style={{ color:'black'}}>{clientId}</button>
+      )}
+      <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px', color:'black' }}>
         <h2 style={{ margin: '0' }}>Timer: {formatTime(timer)}</h2>
       </div>
     </main>

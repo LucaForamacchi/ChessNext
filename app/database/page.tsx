@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { getTutteLePartite } from './db';
 import { useRouter } from 'next/navigation'
 import Link from 'next/link';
+import { getTutteLePartite } from '../database/db';
+
 interface Partita {
   vincitore: string;
   mosse: string;
-  data: Date;
+  data: string;
 }
 let mosse: string;
 
@@ -85,4 +86,4 @@ export default function PartitePage() {
   );
 }
 
-export {mosse}
+export {mosse};

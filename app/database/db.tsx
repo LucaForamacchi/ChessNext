@@ -7,13 +7,12 @@ const connection = mysql.createConnection({
   password: '',
   database: 'scacchi'
 });
-console.log("connesso al database");
 
 // Funzione per ottenere tutte le partite dalla tabella "partite"
 interface Partita {
   vincitore: string;
   mosse: string;
-  data: Date;
+  data: string;
   // altre proprietà della partita
 }
 
@@ -41,23 +40,3 @@ export async function getTutteLePartite(): Promise<Partita[]> {
   });
 }
 
-// Funzione per inserire una nuova partita nel database e restituire true se l'operazione va a buon fine
-export async function inserisciPartita(vincitore: string, mosse: string, data: string): Promise<boolean> {
-  return new Promise<boolean>((resolve, reject) => {
-    if (connection) {
-      const query = `INSERT INTO partite (vincitore, mosse, data) VALUES ('${vincitore}', '${mosse}', '${data}')`;
-      connection.query(query, (error: any, results: any, fields: any) => {
-        if (error) {
-          console.error('Errore durante l\'inserimento della partita:', error);
-          resolve(false);
-        } else {
-          resolve(true);
-        }
-      });
-    } else {
-      const error = new Error('Connessione al database non stabilita.');
-      console.error(error);
-      reject(error);
-    }
-  });
-}

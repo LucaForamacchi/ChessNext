@@ -1,3 +1,43 @@
+'use server';
+const mysql = require('mysql');
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'scacchi'
+});
+console.log("connesso al database");
+
+function inserisciPartita(vincitore, mosse, data) {
+  return new Promise((resolve, reject) => {
+    if (connection) {
+      const query = `INSERT INTO partite (vincitore, mosse, data) VALUES ('${vincitore}', '${mosse}', '${data}')`;
+      connection.query(query, (error, results, fields) => {
+        if (error) {
+          console.error('Errore durante l\'inserimento della partita:', error);
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    } else {
+      const error = new Error('Connessione al database non stabilita.');
+      console.error(error);
+      reject(error);
+    }
+  });
+}
+module.exports = inserisciPartita;
+
+function getCurrentData() {
+  const today = new Date();
+  const day = today.getDate().toString().padStart(2, '0');
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const year = today.getFullYear().toString();
+  return `${day}-${month}-${year}`;
+}
+module.exports = getCurrentData;
+
 const io = require("socket.io")(3000, {
   cors: {
     origin: "http://localhost:3001",
@@ -101,6 +141,12 @@ io.on("connection", (socket) => {
 
   socket.on("end-game", async (win_color) =>{
     io.to(socket.lobby).emit("result", win_color);
+    const movesSenzaFreccia = lobbies[socket.lobby].moves.map(move => move.replace(" =>", ""));
+    const stringMoves = movesSenzaFreccia.join(" ");
+    const db = await inserisciPartita(win_color, stringMoves, getCurrentData());
+    if (db) {
+      console.log('Partita inserita nel database');
+    }
   });
 
   socket.on("new_move", (move) =>{
