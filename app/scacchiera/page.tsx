@@ -235,7 +235,7 @@ export default function Home() {
             newCells[0][c] = 'Q';
           }
           else if(newCells[7][c] === 'p') {
-            newCells[0][c] = 'q';
+            newCells[7][c] = 'q';
           }
         }
 
@@ -276,7 +276,7 @@ export default function Home() {
         else if (temp === "r" && selectedCell.colIndex === 7){setBlackLRookHasMoved(true);}
         else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
       }
-      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
+      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
         // Arrocco bianco corto
         if (rowIndex === 7 && colIndex === 6) {
           setWhiteRRookHasMoved(true);
@@ -291,7 +291,7 @@ export default function Home() {
       setCells(newCells);
       setSelectedCell(null);
       socket?.emit("update_board", newCells, move);
-    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
+    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
           setBlackLRookHasMoved(true);

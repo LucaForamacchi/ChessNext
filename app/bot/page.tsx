@@ -65,12 +65,7 @@ export default function Home() {
       socket.on("update_board", (newCells, currentTurn, new_moves) => {
         const isMyTurn = currentTurn === socket.id;
         // Imposta il turno corrente
-        if(newCells !== lastcells) {
-          setCells(newCells); // Aggiornamento delle celle
-          setlastCells(newCells);
-        }
-        
-        setMoves(moves => [...new_moves]);
+        setMoves(() => [...new_moves]);
 
         const whiteKingPosition = findpiece("K", 'white', newCells);
         const blackKingPosition = findpiece("k", 'black', newCells);
@@ -92,7 +87,7 @@ export default function Home() {
             setEnd(true);
           }
         }
-        
+        //makeComputerMove();
       });
       
       if (moves.length !== 0 && moves.length % 2 === 0) {
@@ -149,7 +144,7 @@ export default function Home() {
             cells[0][c] = 'Q';
           }
           else if(cells[7][c] === 'p') {
-            cells[0][c] = 'q';
+            cells[7][c] = 'q';
           }
         }
         const whiteKingPosition = findpiece("K", 'white', cells);
@@ -176,7 +171,7 @@ export default function Home() {
         else if (temp === "r" && selectedCell.colIndex === 7){setBlackLRookHasMoved(true);}
         else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
       } 
-      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
+      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
         // Arrocco bianco corto
         if (rowIndex === 7 && colIndex === 6) {
           setWhiteRRookHasMoved(true);
@@ -192,7 +187,7 @@ export default function Home() {
       setSelectedCell(null);
       socket?.emit("update_board", newCells, move);
       makeComputerMove();
-    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, cells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
+    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
       
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
@@ -223,15 +218,34 @@ export default function Home() {
   };
 
   const makeComputerMove = () => {
+    if(end){
+      return;
+    }
     //le mosse vanno dispari per spostare i pezzi neri
-    findbestmove('black',cells, 4);
+    findbestmove('black',cells, 3);
     bestscore = 0;
     whitebestscore = 0;
     let [row,col, row2, col2] = bestmove;
     let piece = cells[row][col];
+    
+    
+    if(cells[row2][col2]!== '') {
+      move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}+`;
+    } else{
+      move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}`;
+    }
     cells[row2][col2] = piece;
     cells[row][col] = '';
-    const move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}`;
+    for (let c = 0; c< 8; c++) {
+          
+      if(cells[0][c] === 'P') {
+        cells[0][c] = 'Q';
+      }
+      else if(cells[7][c] === 'p') {
+        cells[7][c] = 'q';
+      }
+    }
+    //console.log("mossa computer");
     socket?.emit("update_board", cells, move)
   };
   
@@ -269,21 +283,31 @@ export default function Home() {
           for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
               if (isValidMove(rowIndex, colIndex, i, j, tempCells)) {
+
                 // Effettua la mossa sulla scacchiera temporanea
                 const newCells = tempCells.map(row => [...row]);
                 const piece = newCells[rowIndex][colIndex];
                 newCells[i][j] = piece;
                 newCells[rowIndex][colIndex] = '';
+                
+                let blackKingPosition = findpiece("k", 'black', tempCells);
+                if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', tempCells)) {
+                  blackKingPosition = findpiece("k", 'black', newCells);
+                  if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
+                    //console.log("mossa scartata", newCells);
+                    continue;
+                  } 
+                } 
                 // Calcola il punteggio per questa mossa
                 const score = calculateScore(newCells);
-                if (depth === 4) {
+                if (depth === 3) {
                   initialscore = score;
                   initialmove = [rowIndex, colIndex, i, j];
                 }
-                //console.log(initialmove, score, bestscore, newCells);
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
-                if (findbestmove('white', newCells, depth - 1) >= initialscore && score >= bestscore) {
-                  console.log(initialmove, score, bestscore, newCells);
+                //if (findbestmove('white', newCells, depth - 1) >= initialscore && score >= bestscore) {
+                if (findbestmove('white', newCells, depth - 1)) {
+                  //console.log(initialmove, score, bestscore, newCells);
                   bestmove = initialmove;
                   bestscore = score;
                 }
@@ -301,14 +325,24 @@ export default function Home() {
                 newCells[i][j] = piece;
                 newCells[rowIndex][colIndex] = '';
                 // Calcola il punteggio per questa mossa
+                
+                let whiteKingPosition = findpiece("K", 'white', tempCells);
+                if(isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', tempCells)) {
+                  whiteKingPosition = findpiece("K", 'white', newCells);
+                  if(isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', newCells)) {
+                    continue;
+                  } 
+                  
+                }
                 const score = calculateScore(newCells);
-                if (depth === 3) {
+                if (depth === 2) {
                   winitialscore = score;
                   winitialmove = [rowIndex, colIndex, i, j];
                 }
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
-                if (findbestmove('black', newCells, depth - 1) <= winitialscore && score <= whitebestscore) {
-                  console.log(winitialmove, score, whitebestscore, newCells);
+                //if (findbestmove('black', newCells, depth - 1) <= winitialscore && score <= whitebestscore) {
+                if (findbestmove('black', newCells, depth - 1)) {
+                  //console.log(winitialmove, score, whitebestscore, newCells);
                   whitebestmove = initialmove;
                   whitebestscore = score;
                 }
