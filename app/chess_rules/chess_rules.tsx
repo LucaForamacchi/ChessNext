@@ -135,10 +135,10 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
     }
 }
 
-export function isValidCastle(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][], kingMoved: boolean, LRookMoved: boolean, RRookMoved: boolean) {
+export function isValidCastle(startRow: number, startCol: number, endRow: number, endCol: number, cells: string[][], kingMoved: boolean, LRookMoved: boolean, RRookMoved: boolean, kingColor: string) {
     const piece = cells[startRow][startCol];
     // Verifica se la mossa è una mossa di arrocco
-    if (piece === 'K' && !kingMoved) { // Arrocco bianco
+    if (piece === 'K' && !kingMoved && kingColor==="white") { // Arrocco bianco
         if (endCol === 6 && !RRookMoved) { // Arrocco corto
             if (cells[7][5] === '' && cells[7][6] === '' && cells[7][7] === 'R') {
                 // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
@@ -157,16 +157,16 @@ export function isValidCastle(startRow: number, startCol: number, endRow: number
                 // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
                 if (!isUnderAttack(7, 2, 'black', cells) && !isUnderAttack(7, 3, 'black', cells) && !isUnderAttack(7, 4, 'black', cells)) {
                     // Sposta il re
-                    cells[0][6] = 'K';
-                    cells[0][4] = '';
+                    cells[7][2] = 'K';
+                    cells[7][4] = '';
                     // Sposta la torre
-                    cells[0][5] = 'R';
-                    cells[0][7] = '';
+                    cells[7][3] = 'R';
+                    cells[7][0] = '';
                     return true;
                 }
             }
         }
-    } else if (piece === 'k' && !kingMoved) { // Arrocco nero
+    } else if (piece === 'k' && !kingMoved && kingColor==="black") { // Arrocco nero
         if (endCol === 6 && !LRookMoved) { // Arrocco corto
             if (cells[0][6] === '' && cells[0][5] === '' && cells[0][7] === 'r') {
                 // Controlla che non ci siano pezzi tra il re e la torre e che le caselle non siano sotto attacco
@@ -240,9 +240,7 @@ export function isCheckMate(kingRow: number, kingCol: number, kingColor: string,
                 const newCol = kingCol + colOffset;
                 if (newRow > 7 || newRow < 0 || newCol > 7 || newCol < 0){continue;}
                 // Verifica se la mossa è valida e se dopo la mossa il re non è più sotto scacco
-                //console.log("arrivo celle", cells);
                 if (isValidMove(kingRow, kingCol, newRow, newCol, cells)) {
-                    //console.log("strano", cells);
                     const cell2 = cells.map(row => [...row]);
                     cell2[newRow][newCol] = kingColor === "white" ? "K" : "k";
                     cell2[kingRow][kingCol] = '';
@@ -276,7 +274,6 @@ export function findpiece(piecename: string, pieceColor: string, cells: string[]
 }
 
 export function caninterfer(kingRow: number, kingCol: number, kingColor: string, cells: string[][]): boolean {
-    //console.log("arrivo celle", cells);
     let attackingColor = kingColor === "white" ? "black" : "white";
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {

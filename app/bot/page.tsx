@@ -171,7 +171,7 @@ export default function Home() {
         else if (temp === "r" && selectedCell.colIndex === 7){setBlackLRookHasMoved(true);}
         else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
       } 
-      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
+      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved, "white")) {
         // Arrocco bianco corto
         if (rowIndex === 7 && colIndex === 6) {
           setWhiteRRookHasMoved(true);
@@ -187,7 +187,7 @@ export default function Home() {
       setSelectedCell(null);
       socket?.emit("update_board", newCells, move);
       makeComputerMove();
-    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
+    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved, "black")){
       
         // Arrocco nero corto
         if (rowIndex === 7 && colIndex === 2) {
@@ -223,8 +223,8 @@ export default function Home() {
     }
     //le mosse vanno dispari per spostare i pezzi neri
     findbestmove('black',cells, 3);
-    bestscore = 0;
-    whitebestscore = 0;
+    bestscore = -10000;
+    whitebestscore = 10000;
     let [row,col, row2, col2] = bestmove;
     let piece = cells[row][col];
     
@@ -245,14 +245,13 @@ export default function Home() {
         cells[7][c] = 'q';
       }
     }
-    //console.log("mossa computer");
     socket?.emit("update_board", cells, move)
   };
   
   
 
-  let initialscore = 0;
-  let winitialscore = 0;
+  let initialscore = -10000;
+  let winitialscore = 10000;
   let bestscore = 0;
   let initialmove: number[];
   let winitialmove: number[];
@@ -294,7 +293,6 @@ export default function Home() {
                 if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', tempCells)) {
                   blackKingPosition = findpiece("k", 'black', newCells);
                   if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
-                    //console.log("mossa scartata", newCells);
                     continue;
                   } 
                 } 
@@ -303,11 +301,11 @@ export default function Home() {
                 if (depth === 3) {
                   initialscore = score;
                   initialmove = [rowIndex, colIndex, i, j];
+                  
                 }
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
-                //if (findbestmove('white', newCells, depth - 1) >= initialscore && score >= bestscore) {
-                if (findbestmove('white', newCells, depth - 1)) {
-                  //console.log(initialmove, score, bestscore, newCells);
+                if (findbestmove('white', newCells, depth - 1) >= initialscore && score >= bestscore) {
+                //if (findbestmove('white', newCells, depth - 1)) {
                   bestmove = initialmove;
                   bestscore = score;
                 }
@@ -340,9 +338,8 @@ export default function Home() {
                   winitialmove = [rowIndex, colIndex, i, j];
                 }
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
-                //if (findbestmove('black', newCells, depth - 1) <= winitialscore && score <= whitebestscore) {
-                if (findbestmove('black', newCells, depth - 1)) {
-                  //console.log(winitialmove, score, whitebestscore, newCells);
+                if (findbestmove('black', newCells, depth - 1) <= winitialscore && score <= whitebestscore) {
+                //if (findbestmove('black', newCells, depth - 1)) {
                   whitebestmove = initialmove;
                   whitebestscore = score;
                 }

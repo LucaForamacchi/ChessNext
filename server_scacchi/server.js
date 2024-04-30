@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
   socket.on("bot", () => {
     // Aggiungi un bot alla lobby corrente
     if (socket.lobby && lobbies[socket.lobby]) {
-      if (lobbies[socket.lobby].players.length < 2) {
+      if (lobbies[socket.lobby].players.length < 2 && !lobbies[socket.lobby].players.full) {
         lobbies[socket.lobby].players.push("bot");
         console.log(`Bot joined lobby ${socket.lobby}`);
         socket.lobby.full = true;

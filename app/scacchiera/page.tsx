@@ -94,7 +94,6 @@ export default function Home() {
       });
     
       socket.on("result", async (result_color) => {
-        console.log(result_color);
         if (clientId === player1) {
           if (result_color === "white") {
             setResultMessage("win");
@@ -221,14 +220,14 @@ export default function Home() {
         else if (temp === "r" && selectedCell.colIndex === 7){setBlackLRookHasMoved(true);}
         else if (temp === "r" && selectedCell.colIndex === 0){setBlackRRookHasMoved(true);}
       }
-      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved)) {
+      else if(isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, WhiteKingHasMoved, WhiteLRookHasMoved, WhiteRRookHasMoved, "white")) {
         // Arrocco bianco corto
         if (rowIndex === 7 && colIndex === 6) {
           setWhiteRRookHasMoved(true);
           move = "O-O";
       }
       // Arrocco bianco lungo
-      else if (rowIndex === 0 && colIndex === 2) {
+      else if (rowIndex === 7 && colIndex === 2) {
           setWhiteLRookHasMoved(true);
           move = "O-O-O";
       }
@@ -236,14 +235,15 @@ export default function Home() {
       setCells(newCells);
       setSelectedCell(null);
       socket?.emit("update_board", newCells, move);
-    }else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved)){
+    } 
+    else if (isValidCastle(selectedCell.rowIndex, selectedCell.colIndex, rowIndex, colIndex, newCells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved, "black")){
         // Arrocco nero corto
-        if (rowIndex === 7 && colIndex === 2) {
+        if (rowIndex === 0 && colIndex === 6) {
           setBlackLRookHasMoved(true);
           move = "o-o";
           }
           // Arrocco nero lungo
-          else if (rowIndex === 7 && colIndex === 6) {
+          else if (rowIndex === 0 && colIndex === 2) {
               setBlackRRookHasMoved(true);
               move = "o-o-o";
           }
