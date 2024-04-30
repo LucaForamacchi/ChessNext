@@ -222,27 +222,49 @@ export default function Home() {
       return;
     }
     //le mosse vanno dispari per spostare i pezzi neri
-    findbestmove('black',cells, 3);
+    findbestmove('black',cells, 2);
     bestscore = -10000;
     whitebestscore = 10000;
     let [row,col, row2, col2] = bestmove;
     let piece = cells[row][col];
     
-    
-    if(cells[row2][col2]!== '') {
-      move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}+`;
-    } else{
-      move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}`;
-    }
-    cells[row2][col2] = piece;
-    cells[row][col] = '';
-    for (let c = 0; c< 8; c++) {
-          
-      if(cells[0][c] === 'P') {
-        cells[0][c] = 'Q';
+    if (piece === 'k'){
+      if (col === 4 && col2 === 6) {
+        setBlackLRookHasMoved(true);
+        move = "o-o";
+        cells[0][6] = 'k';
+        cells[0][4] = '';
+        // Sposta la torre
+        cells[0][5] = 'r';
+        cells[0][7] = '';
+        }
+        // Arrocco nero lungo
+        else if (col === 4 && col2 === 2) {
+            setBlackRRookHasMoved(true);
+            move = "o-o-o";
+            // Sposta il re
+            cells[0][2] = 'k';
+            cells[0][4] = '';
+            // Sposta la torre
+            cells[0][3] = 'r';
+            cells[0][0] = '';
+        }
+    } else {
+      if(cells[row2][col2]!== '') {
+        move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}+`;
+      } else{
+        move = `${letters[col]}${numbers[row]} => ${letters[col2]}${numbers[row2]}`;
       }
-      else if(cells[7][c] === 'p') {
-        cells[7][c] = 'q';
+      cells[row2][col2] = piece;
+      cells[row][col] = '';
+      for (let c = 0; c< 8; c++) {
+            
+        if(cells[0][c] === 'P') {
+          cells[0][c] = 'Q';
+        }
+        else if(cells[7][c] === 'p') {
+          cells[7][c] = 'q';
+        }
       }
     }
     socket?.emit("update_board", cells, move)
@@ -252,12 +274,12 @@ export default function Home() {
 
   let initialscore = -10000;
   let winitialscore = 10000;
-  let bestscore = 0;
+  let bestscore = -10000;
   let initialmove: number[];
   let winitialmove: number[];
   let bestmove: number[];
   let whitebestmove: number[];
-  let whitebestscore = 0;
+  let whitebestscore = 10000;
 
   const findbestmove = (color: string, cells: string[][], depth: number) => {
     // Condizione di terminazione: raggiunto il livello massimo di profondità
@@ -284,7 +306,7 @@ export default function Home() {
               if (isValidMove(rowIndex, colIndex, i, j, tempCells)) {
 
                 // Effettua la mossa sulla scacchiera temporanea
-                const newCells = tempCells.map(row => [...row]);
+                let newCells = tempCells.map(row => [...row]);
                 const piece = newCells[rowIndex][colIndex];
                 newCells[i][j] = piece;
                 newCells[rowIndex][colIndex] = '';
@@ -295,20 +317,51 @@ export default function Home() {
                   if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
                     continue;
                   } 
-                } 
+                } else {
+                  blackKingPosition = findpiece("k", 'black', newCells);
+                  if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)){
+                    continue;
+                  }
+
+                }
                 // Calcola il punteggio per questa mossa
                 const score = calculateScore(newCells);
-                if (depth === 3) {
+                if (depth === 2) {
                   initialscore = score;
                   initialmove = [rowIndex, colIndex, i, j];
                   
                 }
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
-                if (findbestmove('white', newCells, depth - 1) >= initialscore && score >= bestscore) {
-                //if (findbestmove('white', newCells, depth - 1)) {
+                if (findbestmove('white', newCells, depth - 1) && score >= bestscore) {
                   bestmove = initialmove;
                   bestscore = score;
                 }
+              } else if(tempCells[rowIndex][colIndex]=='k'&& i===rowIndex){
+                let newCells = tempCells.map(row => [...row]);
+                if (isValidCastle(rowIndex, colIndex, i, j, newCells, BlackKingHasMoved, BlackRRookHasMoved, BlackLRookHasMoved, "black")){
+                  let blackKingPosition = findpiece("k", 'black', tempCells);
+                  if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', tempCells)) {
+                  blackKingPosition = findpiece("k", 'black', newCells);
+                  if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
+                    continue;
+                  } 
+                  } 
+                  // Calcola il punteggio per questa mossa
+                  const score = calculateScore(newCells);
+                  if (depth === 2) {
+                    initialscore = score;
+                    initialmove = [rowIndex, colIndex, i, j];
+                    
+                  }
+                  // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
+                  if (findbestmove('white', newCells, depth - 1) && score >= bestscore) {
+                  //if (findbestmove('white', newCells, depth - 1)) {
+                    bestmove = initialmove;
+                    bestscore = score;
+                  }
+                } 
+              } else {
+                continue;
               }
             }
           }
@@ -318,7 +371,7 @@ export default function Home() {
             for (let j = 0; j < 8; j++) {
               if (isValidMove(rowIndex, colIndex, i, j, tempCells)) {
                 // Effettua la mossa sulla scacchiera temporanea
-                const newCells = tempCells.map(row => [...row]);
+                let newCells = tempCells.map(row => [...row]);
                 const piece = newCells[rowIndex][colIndex];
                 newCells[i][j] = piece;
                 newCells[rowIndex][colIndex] = '';
@@ -333,12 +386,12 @@ export default function Home() {
                   
                 }
                 const score = calculateScore(newCells);
-                if (depth === 2) {
+                if (depth === 1) {
                   winitialscore = score;
                   winitialmove = [rowIndex, colIndex, i, j];
                 }
                 // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
-                if (findbestmove('black', newCells, depth - 1) <= winitialscore && score <= whitebestscore) {
+                if (findbestmove('black', newCells, depth - 1) && score <= whitebestscore) {
                 //if (findbestmove('black', newCells, depth - 1)) {
                   whitebestmove = initialmove;
                   whitebestscore = score;

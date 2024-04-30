@@ -184,8 +184,9 @@ export default function Home() {
         }
 
         if (clientId===player1) {
-          const whiteKingPosition = findpiece("K", 'white', newCells);
-          if(isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', newCells)) {
+          let whiteKingPosition = findpiece("K", 'white', cells);
+          if(isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', cells)) {
+            let whiteKingPosition = findpiece("K", 'white', newCells);
             if(!isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', newCells)) {
               socket?.emit("update_board", newCells, move);
               setCells(newCells);
@@ -198,8 +199,9 @@ export default function Home() {
             setSelectedCell(null);
           }
         } else {
-          const blackKingPosition = findpiece("k", 'black', newCells);
-          if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
+          let blackKingPosition = findpiece("k", 'black', cells);
+          if(isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', cells)) {
+            blackKingPosition = findpiece("k", 'black', newCells);
             if(!isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)) {
               socket?.emit("update_board", newCells, move);
               setCells(newCells);

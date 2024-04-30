@@ -359,6 +359,18 @@ export const calculateScore = (cells: any[]) => {
         [-1,  0.5,  0,  0,  0,  0,  0.5, -1],
         [-2, -1, -1, -1, -1, -1, -1, -2]
       ];
+
+      const kingPositionScores = [
+        [ 0, 3, 2, 0, 0, 0, 3, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0]
+      ];
+      
       
     const bishopPairBonus = 0.5; 
     let myBishopCount = 0; // Count of my bishops
@@ -383,7 +395,10 @@ export const calculateScore = (cells: any[]) => {
             } else if (piece === 'b') {
                 myScore += bishopPositionScores[i][j];
                 myBishopCount++;
-              }
+            }
+            else if (piece === 'k'){
+                myScore += kingPositionScores[i][j];
+            }
           } else { // Se il pezzo non è nero, aggiungi il suo valore al tuo punteggio
             opponentScore += pieceValues[piece.toLowerCase()];
             // Se il pezzo è un pedone bianco, aggiungi anche il punteggio posizionale
@@ -396,7 +411,10 @@ export const calculateScore = (cells: any[]) => {
             else if (piece === 'B') {
                 opponentScore += bishopPositionScores[7 - i][j];
                 opponentBishopCount++;
-              }
+            }
+            else if (piece === 'K'){
+                myScore += kingPositionScores[7 - i][j];
+            }
           }
         }
       }
