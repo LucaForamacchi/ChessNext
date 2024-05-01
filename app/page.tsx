@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 
 // Componente del logo
 const Logo = () => (
-  <div style={{ fontSize: '35px', fontWeight: 'bold', marginBottom: '20px' }}>
+  <div style={{ fontSize: '35px', fontWeight: 'bold', marginBottom: '20px', color: 'black' }}>
     Scacchi in next by Luca e Alberto
   </div>
 );
@@ -44,11 +44,11 @@ export default function Page() {
             onMouseEnter={() => setHoverdatabase(true)}
             onMouseLeave={() => setHoverdatabase(false)}
           >
-            Partite passate
+            Archivio partite
           </button>
         </Link>
       </div>
-      <img className='background-image' src='immaginescacchi.png' style={{height: '705px'}}></img>
+      <img className='background-image' src='immaginescacchi.png' style={{height: '500px'}}></img>
     </div>
   );
 }

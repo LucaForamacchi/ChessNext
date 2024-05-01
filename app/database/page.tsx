@@ -53,13 +53,13 @@ export default function PartitePage() {
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
           >
-            indietro
+            Indietro
           </button>
         </Link>
       </div>
     <div style={{ backgroundColor: '#c3e6cb', color: 'black', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div>
-        <h1 style={{ textAlign: 'center', marginBottom: '20px', fontSize:'40px' }}>Partite</h1>
+        <h1 style={{ textAlign: 'center', marginBottom: '20px', fontSize:'40px' }}>Archivio partite</h1>
         {partiteFromDB.length > 0 ? (
           <table style={{ borderCollapse: 'collapse', border: '1px solid black', width: '100%', backgroundColor: 'white', fontSize: '16px' }}>
             <thead>
@@ -80,7 +80,7 @@ export default function PartitePage() {
             </tbody>
           </table>
         ) : (
-          <p style={{ fontSize: '16px' }}>Nessuna partita trovata</p>
+          <p style={{ fontSize: '16px', textAlign: 'center' }}>Nessuna partita trovata</p>
         )}
       </div>
     </div>
