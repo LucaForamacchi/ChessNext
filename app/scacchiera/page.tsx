@@ -310,8 +310,8 @@ export default function Home() {
             row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-slate-300' : 'bg-gray-500'} w-12 h-12 flex justify-center items-center` }
-                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${8-rowIndex}`) ? 'yellow' : undefined }}
+                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-indigo-200' : 'bg-gray-500'} w-12 h-12 flex justify-center items-center` }
+                style={{ backgroundColor: moves.length > 0 && moves[moves.length - 1].includes(`${letters[colIndex]}${8-rowIndex}`) ? '#ffd700' : undefined }}
                 onClick={() => { handleCellClick(rowIndex, colIndex); }}
               >
                 {cell !== '' ? (

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { renderCellContent } from '../chess_rules/chess_rules';
 import { mosse } from "../database/page";
 import { vincitore } from "../database/page";
-import { setConfig } from "next/config";
 
 export default function Home() {
   const [hover1vs1, setHover] = useState(false);
@@ -98,26 +97,27 @@ export default function Home() {
     useEffect(() => {
       setVisualizzaMoves(testMovesArray);
       setMoves(testMovesArray);
-      const arrocco_corto_bianco = testMovesArray.some((element) => element === 'O-O');
-      if (arrocco_corto_bianco) {
-        const updatedArray = testMovesArray.map((element) => (element === 'O-O' ? ['e1', 'g1', 'h1', 'f1'] : element));
-        setMoves(updatedArray.flat());
-      }
-      const arrocco_lungo_bianco = testMovesArray.some((element) => element === 'O-O-O');
-      if (arrocco_lungo_bianco) {
-        const updatedArray = testMovesArray.map((element) => (element === 'O-O-O' ? ['e1', 'c1', 'a1', 'd1'] : element));
-        setMoves(updatedArray.flat());
-      }
-      const arrocco_corto_nero = testMovesArray.some((element) => element === 'o-o');
-      if (arrocco_corto_nero) {
-        const updatedArray = testMovesArray.map((element) => (element === 'o-o' ? ['e8', 'g8', 'h8', 'f8'] : element));
-        setMoves(updatedArray.flat());
-      }
-      const arrocco_lungo_nero = testMovesArray.some((element) => element === 'o-o-o');
-      if (arrocco_lungo_bianco) {
-        const updatedArray = testMovesArray.map((element) => (element === 'o-o-o' ? ['e8', 'c8', 'a8', 'd8'] : element));
-        setMoves(updatedArray.flat());
-      }
+      type ArroccoMove = 'O-O' | 'O-O-O' | 'o-o' | 'o-o-o';
+
+      const arroccoMoves: Record<ArroccoMove, string[]> = {
+        'O-O': ['e1', 'g1', 'h1', 'f1'],
+        'O-O-O': ['e1', 'c1', 'a1', 'd1'],
+        'o-o': ['e8', 'g8', 'h8', 'f8'],
+        'o-o-o': ['e8', 'c8', 'a8', 'd8'],
+      };
+
+      const updatedMoves: string[] = [];
+
+      testMovesArray.forEach(move => {
+        if (arroccoMoves.hasOwnProperty(move as ArroccoMove)) {
+          updatedMoves.push(...arroccoMoves[move as ArroccoMove]);
+        } else {
+          updatedMoves.push(move);
+        }
+      });
+
+      setMoves(updatedMoves);
+
     }, []);
   }
   
@@ -149,12 +149,12 @@ export default function Home() {
             row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-slate-300' : 'bg-gray-500'} w-12 h-12 flex justify-center items-center`}
+                className={`p-4 ${rowIndex % 2 === colIndex % 2 ? 'bg-indigo-200' : 'bg-gray-500'} w-12 h-12 flex justify-center items-center`}
                 style={{ 
                   backgroundColor: 
                     moves.length > 0 && 
                     moves[moveIndex] && 
-                    moves[moveIndex].includes(`${letters[colIndex]}${8-rowIndex}`) ? 'yellow' : undefined 
+                    moves[moveIndex].includes(`${letters[colIndex]}${8-rowIndex}`) ? '#ffd700' : undefined 
                 }}
               >
                 {renderCellContent(cell)}
