@@ -173,6 +173,7 @@ export default function Home() {
         newCells[selectedCell.rowIndex][selectedCell.colIndex] = '';
         // Sposta il pezzo nella nuova posizione
         newCells[rowIndex][colIndex] = temp;
+        
         for (let c = 0; c< 8; c++) {
           
           if(newCells[0][c] === 'P') {
@@ -194,9 +195,13 @@ export default function Home() {
             } 
             
           } else {
+            let whiteKingPosition = findpiece("K", 'white', newCells);
+            if(!isUnderAttack(whiteKingPosition.row,whiteKingPosition.col, 'black', newCells)){
             socket?.emit("update_board", newCells, move);
             setCells(newCells);
             setSelectedCell(null);
+            }
+            
           }
         } else {
           let blackKingPosition = findpiece("k", 'black', cells);
@@ -209,9 +214,12 @@ export default function Home() {
             } 
             
           } else {
-            socket?.emit("update_board", newCells, move);
-            setCells(newCells);
-            setSelectedCell(null);
+            blackKingPosition = findpiece("k", 'black', newCells);
+            if(!isUnderAttack(blackKingPosition.row,blackKingPosition.col, 'white', newCells)){
+              socket?.emit("update_board", newCells, move);
+              setCells(newCells);
+              setSelectedCell(null);
+              }
           }
         }
         
