@@ -87,7 +87,6 @@ export default function Home() {
             setEnd(true);
           }
         }
-        //makeComputerMove();
       });
       
       if (moves.length !== 0 && moves.length % 2 === 0) {
@@ -107,9 +106,6 @@ export default function Home() {
     }
   }, [socket, cells]); // Aggiunta cells come dipendenza
   
-  
-  
-
   const handleCellClick = (rowIndex: number, colIndex: number) => {
     if (!lobby || end) {
         return;
@@ -155,7 +151,6 @@ export default function Home() {
             setSelectedCell(null);
             makeComputerMove();
           }
-          
         } else {
           
           socket?.emit("update_board", newCells, move);
@@ -270,8 +265,6 @@ export default function Home() {
     socket?.emit("update_board", cells, move)
   };
   
-  
-
   let initialscore = -10000;
   let winitialscore = 10000;
   let bestscore = -10000;
@@ -355,7 +348,6 @@ export default function Home() {
                   }
                   // Chiamata ricorsiva per continuare la ricerca a profondità inferiore
                   if (findbestmove('white', newCells, depth - 1) && score >= bestscore) {
-                  //if (findbestmove('white', newCells, depth - 1)) {
                     bestmove = initialmove;
                     bestscore = score;
                   }
@@ -406,10 +398,6 @@ export default function Home() {
     return bestscore;
   }
 
-  
-  
-  
-  
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24" style={{ backgroundColor: '#c3e6cb', position: 'relative' }}>
       <div className="button-wrapper" style={{ position: 'absolute', top: 10, right: 10 }}>
@@ -434,7 +422,7 @@ export default function Home() {
               }</div>
           ))}
         </div>
-        <div className="grid grid-cols-8 relative"> {/* Aggiunto il relative positioning */}
+        <div className="grid grid-cols-8 relative">
           {letters.map((letter, index) => (
             <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center" style={{ color:'black'}}>{
               <div>{letter}</div>
@@ -456,7 +444,6 @@ export default function Home() {
               </div>
             ))
           ))}
-          {/* Sovrapposizione del messaggio di vittoria */}
           {resultMessage && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className={`bg-white p-4 rounded shadow ${resultMessage === 'Win' ? 'text-green-600' : 'text-red-600'}`}>
@@ -472,7 +459,6 @@ export default function Home() {
       {lobby && (
         <h2 style={{ color:'black'}}>You are in lobby: {lobby}</h2>
       )}
-
       <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: '#c3e6cb', padding: '10px', borderRadius: '5px', color: 'black' }}>
         <h2 style={{ margin: '0' }}>Timer: {formatTime(timer)}</h2>
       </div>

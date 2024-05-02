@@ -23,7 +23,6 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
         }
     }
     
-
     if (piece === 'P'){//pedone bianco
         if (startCol === endCol && endRow < startRow) { // Movimento in avanti
             if ((deltay === 1 && destinationPiece === '') || (startRow === 6 && deltaY === 2 && destinationPiece === '' && cells[endRow + 1][endCol] === '')) {
@@ -49,7 +48,6 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                 return true;  // Mosse valide a "L" del cavallo
             } else{return false;}
 
-        
         case 'B': // Alfiere
             // Controllo se si sta muovendo lungo una diagonale
             if (Math.abs(deltax) === Math.abs(deltay)) {
@@ -89,9 +87,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                 return false; // Se non si muove lungo una riga o una colonna, la mossa non è valida
             }
         
-        
         case 'Q': // Regina
-             
                 // Controllo se si muove lungo una riga, una colonna o una diagonale
                 if (startRow === endRow) { // Si sta muovendo lungo una riga
                     let colIncrement = (endCol > startCol) ? 1 : -1; // Incremento della colonna
@@ -120,9 +116,7 @@ export function isValidMove(startRow: number, startCol: number, endRow: number, 
                 }
 
                 return true;  // Se non ci sono pezzi tra la posizione di partenza e la posizione di destinazione, la mossa è valida
-            
-        
-        
+             
         case 'K': // Re 
             if ((deltax <= 1 && deltay <= 1)) { // Controllo se il re si muove al massimo di una casella in orizzontale o verticale
                 return true;  // La mossa è valida
@@ -198,7 +192,6 @@ export function isValidCastle(startRow: number, startCol: number, endRow: number
     return false; // La mossa non è un arrocco valido
 }
 
-
 // Funzione per verificare se una posizione è sotto attacco
 export function isUnderAttack(row: number, col: number, attackingColor: string, cells1: string[][]) {
     // Trova il colore opposto
@@ -221,8 +214,6 @@ export function isUnderAttack(row: number, col: number, attackingColor: string, 
     // Nessuna mossa avversaria può raggiungere la posizione specificata
     return false; // La posizione non è sotto attacco
 }
-
-
 
 export function isCheckMate(kingRow: number, kingCol: number, kingColor: string, cells: string[][]) {
     const attackingColor = kingColor === "white" ? "black" : "white";
@@ -312,7 +303,6 @@ export function caninterfer(kingRow: number, kingCol: number, kingColor: string,
         }
     } 
     return false;
-
 }
 
 // Funzione per calcolare il punteggio di una mossa

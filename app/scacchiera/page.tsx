@@ -19,7 +19,6 @@ export default function Home() {
   
   const [selectedCell, setSelectedCell] = useState<{ rowIndex: number, colIndex: number } | null>(null);
   const [moves, setMoves] = useState<string[]>([]);
-  const [lastMove, setLastMove] = useState('');
   const [hover1vs1, setHover] = useState(false);
   const [timer, setTimer] = useState<number>(600);
   const [lobby, setLobby] = useState("");
@@ -69,9 +68,7 @@ export default function Home() {
       socket.on("lobby_joined", (lobbyName, creatorid) => {
         setLobby(lobbyName);
         setplayer1(creatorid[0]);
-        //if (clientId!==player1){
-        //  setTurn(false);
-        //}
+        
       });
 
       socket.on("update_board", (newCells, currentTurn, new_moves) => {
@@ -116,7 +113,6 @@ export default function Home() {
         }
       });
       
-      //socket.emit("checkmate");
       let intervalId: NodeJS.Timeout;
       const decrementTimer = () => {
         setTimer(prevTimer => {
@@ -300,7 +296,7 @@ export default function Home() {
               }</div>
           ))}
         </div>
-        <div className="grid grid-cols-8 relative" style={rotationStyle}> {/* Aggiunto il relative positioning */}
+        <div className="grid grid-cols-8 relative" style={rotationStyle}>
           {letters.map((letter, index) => (
             <div key={`letter-${index}`} className="p-4 w-12 h-12 flex justify-center items-center" style={{ color:'black'}}>{
               <div style={rotationStyle}>{letter}</div>
@@ -322,7 +318,6 @@ export default function Home() {
               </div>
             ))
           ))}
-          {/* Sovrapposizione del messaggio di vittoria */}
           {resultMessage && (
             <div className="absolute inset-0 flex items-center justify-center" style={rotationStyle}>
               <div className={`bg-white p-4 rounded shadow ${resultMessage === 'win' ? 'text-green-600' : 'text-red-600'}`}>
@@ -337,9 +332,6 @@ export default function Home() {
       </div>
       {lobby && (
         <h2 style={{ color:'black'}}>You are in lobby: {lobby}</h2>
-      )}
-      {(
-        <button style={{ color:'black'}}>{player1}</button>
       )}
       {(
         <button style={{ color:'black'}}>{clientId}</button>

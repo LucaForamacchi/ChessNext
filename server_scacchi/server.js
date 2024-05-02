@@ -6,7 +6,6 @@ const connection = mysql.createConnection({
   password: '',
   database: 'scacchi'
 });
-console.log("connesso al database");
 
 function inserisciPartita(vincitore, mosse, data) {
   return new Promise((resolve, reject) => {
@@ -120,8 +119,6 @@ io.on("connection", (socket) => {
     }
   });
   
-
-
   socket.on("message", (message) => {
     io.to(socket.lobby).emit("message", message);
   });
