@@ -83,7 +83,7 @@ export default function Home() {
         setMoves(moves => [...new_moves]);
       });
       
-      socket.on("isCheckMate", async () => {
+      socket.on("isCheckMate", () => {
         const whiteKingPosition = findpiece("K", 'white', cells);
         const blackKingPosition = findpiece("k", 'black', cells);
         if (isCheckMate(whiteKingPosition.row, whiteKingPosition.col, "white", cells)) {
@@ -93,7 +93,7 @@ export default function Home() {
         }
       });
     
-      socket.on("result", async (result_color) => {
+      socket.on("result", (result_color) => {
         if (clientId === player1) {
           if (result_color === "white") {
             setResultMessage("win");
